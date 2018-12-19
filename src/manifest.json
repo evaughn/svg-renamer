@@ -1,0 +1,29 @@
+{
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
+  "icon": "icon.png",
+  "description": "Changes the svg file export name to something more desirable",
+  "author": "Evan Vaughn",
+  "authorEmail": "evan@goabstract.com",
+  "name": "SVG Export Renamer",
+  "commands": [
+    {
+      "name": "SVG Export Renamer",
+      "identifier": "my-command-identifier",
+      "handlers": {
+        "run": "onRun",
+        "actions": {
+          "ExportSlices": "renameExport",
+          "Export": "renameExport"
+        }
+      },
+      "script": "./plugin.js"
+    }
+  ],
+  "menu": {
+    "title": "About SVG Export Renamer",
+    "items": [
+      "my-command-identifier"
+    ]
+  }
+}
