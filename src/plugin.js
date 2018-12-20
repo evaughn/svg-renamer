@@ -49,9 +49,9 @@ export function renameExport(context) {
     Promise.all(filesToRename.map(fileDict => {
       var artboardName = fileDict.request.name();
       var name = artboardName.toLowerCase();
-      name = name.replace(/\W(!\s|\&)/g, "");
-      name = name.replace(/\&/g, "and");
       name = name.replace(/\s/g, "-");
+      name = name.replace(/\&/g, "and");
+      name = name.replace(/(?!-)([0-9]|\W|\_)/g, "");
 
       var nameArray = name.split("/");
       var categoryName = nameArray[0];
