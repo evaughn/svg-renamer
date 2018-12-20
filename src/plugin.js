@@ -67,12 +67,15 @@ export function renameExport(context) {
         exportName = useDefaultPrefix ? `${defaultPrefix}${categoryName}-${typeName}` : `${categoryName}-${typeName}`;
       }
 
-      var newOutputPath = fileDict.path.replace(artboardName, exportName);
+      log(exportName);
+
+      var newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
       var svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
-      
+      log(newOutputPath);
+
       try {
-        fileManager.removeItemAtPath_error(fileDict.path, "Error in deleting source icon"); 
-      } catch(e) {
+        fileManager.removeItemAtPath_error(fileDict.path, "Error in deleting source icon");
+      } catch (e) {
         return Promise.reject("Error in deleting source icon");
       }
 
@@ -97,8 +100,6 @@ export function renameExport(context) {
       } catch(e) {
         return Promise.reject(`There was an error in rewriting file to the ${newOutputPath}`);
       }
-
-      svgFile.writeToFile_atomically(newOutputPath, true);
     }))
     .then(() => {
       log("All svgs were successfully renamed");
