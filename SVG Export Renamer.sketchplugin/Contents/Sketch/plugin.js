@@ -1333,8 +1333,10 @@ function renameExport(context) {
       var artboardName = fileDict.request.name();
       var name = artboardName.toLowerCase();
       name = name.replace(/\s/g, "-");
+      log(name);
       name = name.replace(/\&/g, "and");
-      name = name.replace(/(?!-)([0-9]|\W|\_)/g, "");
+      name = name.replace(/(?!-)(?!\/)([0-9]|\W|\_)/g, "");
+      log(name);
       var nameArray = name.split("/");
       var categoryName = nameArray[0];
       var typeName = nameArray[nameArray.length - 1];
