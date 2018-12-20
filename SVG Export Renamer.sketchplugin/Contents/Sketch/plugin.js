@@ -1284,26 +1284,39 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _skpm_dialog__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_skpm_dialog__WEBPACK_IMPORTED_MODULE_1__);
 
 
-var savedPrefix;
-var defaultPrefix = "icon";
-var useDefaultPrefix = false;
+var defaultPrefix = "icon-";
 function showSettings() {
   log("SHOWING OPTIONS");
+  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
   var response = _skpm_dialog__WEBPACK_IMPORTED_MODULE_1___default.a.showMessageBox({
-    message: "About SVG Export Renamer",
-    detail: "This plugin allows for renaming of SVG exports.\n\n Artboard Name: Foo => foo.svg \n\n Artboard Name: Foo\\Bar => foo-bar.svg",
-    checkboxLabel: "Use icon prefix (Artboard Name: Foo => icon-foo.svg",
-    checkboxChecked: false,
-    callback: function callback(response, checkboxChecked) {
-      log(checkboxChecked);
-      useDefaultPrefix = checkboxChecked;
+    type: "info",
+    title: "About SVG Export Renamer",
+    message: "This plugin allows for renaming of SVG exports.",
+    detail: "Artboard Name: Foo => foo.svg\nArtboard Name: Foo\\Bar => foo-bar.svg",
+    checkboxLabel: "Use `icon-` prefix",
+    buttons: ['Save', 'Reset'],
+    checkboxChecked: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true
+  }, function (_ref) {
+    var response = _ref.response,
+        checkboxChecked = _ref.checkboxChecked;
+
+    if (response == 0) {
+      // Clicked Save
+      userDefaults.setObject_forKey(checkboxChecked, "useDefaultPrefix");
+    } else {
+      // reset
+      userDefaults.setObject_forKey(1, "useDefaultPrefix");
     }
+
+    userDefaults.synchronize();
   });
 }
 ;
 function renameExport(context) {
   log("RUNNING EXPORT");
   var fileManager = NSFileManager.defaultManager();
+  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
+  var useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true;
   var exports = context.actionContext.exports;
   var filesToRename = [];
 
@@ -1329,9 +1342,9 @@ function renameExport(context) {
       var exportName = "";
 
       if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
-        exportName = useDefaultPrefix ? "".concat(prefix, "-").concat(categoryName) : categoryName;
+        exportName = useDefaultPrefix ? "".concat(defaultPrefix).concat(categoryName) : categoryName;
       } else {
-        exportName = useDefaultPrefix ? "".concat(prefix, "-").concat(categoryName, "-").concat(typeName) : "".concat(categoryName, "-").concat(typeName);
+        exportName = useDefaultPrefix ? "".concat(defaultPrefix).concat(categoryName, "-").concat(typeName) : "".concat(categoryName, "-").concat(typeName);
       }
 
       var newOutputPath = fileDict.path.replace(artboardName, exportName);
@@ -1365,8 +1378,10 @@ function renameExport(context) {
 
       svgFile.writeToFile_atomically(newOutputPath, true);
     })).then(function () {
+      log("All svgs were successfully renamed");
       sketch__WEBPACK_IMPORTED_MODULE_0___default.a.UI.message("All svgs were successfully renamed");
     }).catch(function (error) {
+      log(error);
       sketch__WEBPACK_IMPORTED_MODULE_0___default.a.UI.message(error);
     });
   }
