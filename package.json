@@ -1,13 +1,13 @@
 {
-  "name": "export-svg",
+  "name": "svg-export-renamer",
   "version": "0.1.0",
   "engines": {
     "sketch": ">=3.0"
   },
   "skpm": {
-    "name": "export-svg",
+    "name": "SVG Export Renamer",
     "manifest": "src/manifest.json",
-    "main": "export-svg.sketchplugin",
+    "main": "SVG Export Renamer.sketchplugin",
     "assets": [
       "assets/**/*"
     ]
@@ -19,7 +19,8 @@
     "postinstall": "npm run build && skpm-link"
   },
   "devDependencies": {
-    "@skpm/builder": "^0.5.11"
+    "@skpm/builder": "^0.5.11",
+    "@skpm/dialog": "^0.2.4"
   },
   "author": "Evan Vaughn <evan@goabstract.com>"
 }

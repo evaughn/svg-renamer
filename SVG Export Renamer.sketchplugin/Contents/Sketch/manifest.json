@@ -18,7 +18,10 @@
           "Export": "renameExport"
         }
       },
-      "script": "./plugin.js"
+      "script": "plugin.js"
     }
-  ]
+  ],
+  "version": "0.1.0",
+  "disableCocoaScriptPreprocessor": true,
+  "appcast": "https://raw.githubusercontent.com//master/.appcast.xml"
 }
