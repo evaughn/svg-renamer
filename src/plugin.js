@@ -1,5 +1,6 @@
 import sketch from "sketch";
 import dialog from "@skpm/dialog";
+import { map } from "lodash";
 
 var defaultPrefix = "icon-";
 
@@ -46,14 +47,13 @@ export function renameExport(context) {
   }
 
   if (filesToRename.length > 0) {
-    Promise.all(filesToRename.map(fileDict => {
+    const oldFiles = {};
+    const oldFilePaths = filesToRename.reduce((dictionary, fileDict) => {
       var artboardName = fileDict.request.name();
       var name = artboardName.toLowerCase();
       name = name.replace(/\s/g, "-");
-      log(name);
       name = name.replace(/\&/g, "and");
       name = name.replace(/(?!-)(?!\/)([0-9]|\W|\_)/g, "");
-      log(name);
 
       var nameArray = name.split("/");
       var categoryName = nameArray[0];
@@ -67,39 +67,40 @@ export function renameExport(context) {
         exportName = useDefaultPrefix ? `${defaultPrefix}${categoryName}-${typeName}` : `${categoryName}-${typeName}`;
       }
 
-      log(exportName);
-
       var newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
-      var svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
-      log(newOutputPath);
-
-      try {
-        fileManager.removeItemAtPath_error(fileDict.path, "Error in deleting source icon");
-      } catch (e) {
-        return Promise.reject("Error in deleting source icon");
-      }
 
       if (isDirectory) {
         var pathArray = fileDict.path.split("/");
         var directoryPath = pathArray
           .splice(0, pathArray.length - 1)
           .join("/");
-        var fileContents = fileManager.directoryContentsAtPath(directoryPath);
-
-        if (fileContents.length === 0) {
-          try {
-           fileManager.removeItemAtPath_error(directoryPath, `There was an error in deleting the ${typeName} icon directory`);
-          } catch(e) {
-            return Promise.reject(`There was an error in deleting the ${typeName} icon directory`);
+        if (!dictionary[categoryName]) {
+          dictionary[categoryName] = {
+            path: directoryPath
           }
         }
+       } else {
+        dictionary[typeName] = {
+          path: fileDict.path
+        };
       }
 
-      try {
-        return Promise.resolve(svgFile.writeToFile_atomically(newOutputPath, true));
-      } catch(e) {
-        return Promise.reject(`There was an error in rewriting file to the ${newOutputPath}`);
+      if (fileManager.fileExistsAtPath(fileDict.path)) {
+        var svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
+        svgFile.writeToFile_atomically(newOutputPath, true)
       }
+
+      return dictionary;
+    }, {});
+
+    Promise.all(map(oldFilePaths, (oldFilePath) => {
+      if(fileManager.fileExistsAtPath(oldFilePath.path)) {
+        try {
+          fileManager.removeItemAtPath_error(oldFilePath.path, "Error in deleting source icon");
+        } catch(e) {
+          return Promise.reject(`Error in deleting source icon: ${e}`);
+        }
+      };
     }))
     .then(() => {
       log("All svgs were successfully renamed");
