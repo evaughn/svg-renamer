@@ -3,10 +3,11 @@ import dialog from "@skpm/dialog";
 import { map } from "lodash";
 
 const defaultPrefix = "icon-";
+const suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
 
 export function showSettings() {
   log("SHOWING OPTIONS");
-  const userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
+  const userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   const response = dialog.showMessageBox({
     type: "info",
     title: "About SVG Export Renamer",
@@ -31,7 +32,7 @@ export function showSettings() {
 
 
 function getUserDefaults() {
-  const userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
+  const userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   const useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil 
     ? userDefaults.objectForKey("useDefaultPrefix") == 1 
     : true;
@@ -61,7 +62,7 @@ export function renameExport(context) {
       const artboardName = fileDict.request.name();
       let exportName = "";
       let name = artboardName.toLowerCase();
-      
+
       name = name.replace(/\s/g, "-");
       name = name.replace(/\&/g, "and");
       name = name.replace(/(?!-)(?!\/)([0-9]|\W|\_)/g, "");
