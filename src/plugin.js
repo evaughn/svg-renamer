@@ -2,12 +2,12 @@ import sketch from "sketch";
 import dialog from "@skpm/dialog";
 import { map } from "lodash";
 
-var defaultPrefix = "icon-";
+const defaultPrefix = "icon-";
 
 export function showSettings() {
   log("SHOWING OPTIONS");
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
-  var response = dialog.showMessageBox({
+  const userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
+  const response = dialog.showMessageBox({
     type: "info",
     title: "About SVG Export Renamer",
     message: "This plugin allows for renaming of SVG exports.",
@@ -29,37 +29,47 @@ export function showSettings() {
   });
 };
 
-export function renameExport(context) {
-  log("RUNNING EXPORT");
-  var fileManager = NSFileManager.defaultManager();
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
-  var useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil 
+
+function getUserDefaults() {
+  const userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
+  const useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil 
     ? userDefaults.objectForKey("useDefaultPrefix") == 1 
     : true;
-  var exports = context.actionContext.exports;
-  var filesToRename = [];
+  const customSuffix = userDefaults.objectForKey("customSuffix") != nil 
+    ? useDefaults.objectForKey("customSuffix") 
+    : false;
+  return { useDefaultPrefix, customSuffix }
+}
 
-  for (var i = 0; i < exports.length; i++) {
-    var currentExport = exports[i];
+export function renameExport(context) {
+  log("RUNNING EXPORT");
+  const fileManager = NSFileManager.defaultManager();
+  const { useDefaultPrefix, customSuffix } = getUserDefaults();
+  const exports = context.actionContext.exports;
+  let filesToRename = [];
+
+  for (let i = 0; i < exports.length; i++) {
+    const currentExport = exports[i];
     if (currentExport.request.format() == "svg") {
       filesToRename.push(currentExport);
     }
   }
 
   if (filesToRename.length > 0) {
-    const oldFiles = {};
+    let oldFiles = {};
     const oldFilePaths = filesToRename.reduce((dictionary, fileDict) => {
-      var artboardName = fileDict.request.name();
-      var name = artboardName.toLowerCase();
+      const artboardName = fileDict.request.name();
+      let exportName = "";
+      let name = artboardName.toLowerCase();
+      
       name = name.replace(/\s/g, "-");
       name = name.replace(/\&/g, "and");
       name = name.replace(/(?!-)(?!\/)([0-9]|\W|\_)/g, "");
 
-      var nameArray = name.split("/");
-      var categoryName = nameArray[0];
-      var typeName = nameArray[nameArray.length - 1];
-      var isDirectory = nameArray.length > 1;
-      var exportName = "";
+      const nameArray = name.split("/");
+      const categoryName = nameArray[0];
+      const typeName = nameArray[nameArray.length - 1];
+      const isDirectory = nameArray.length > 1;
 
       if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
         exportName = useDefaultPrefix ? `${defaultPrefix}${categoryName}` : categoryName;
@@ -67,11 +77,11 @@ export function renameExport(context) {
         exportName = useDefaultPrefix ? `${defaultPrefix}${categoryName}-${typeName}` : `${categoryName}-${typeName}`;
       }
 
-      var newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
+      const newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
 
       if (isDirectory) {
-        var pathArray = fileDict.path.split("/");
-        var directoryPath = pathArray
+        const pathArray = fileDict.path.split("/");
+        const directoryPath = pathArray
           .splice(0, pathArray.length - 1)
           .join("/");
         if (!dictionary[categoryName]) {
@@ -86,7 +96,7 @@ export function renameExport(context) {
       }
 
       if (fileManager.fileExistsAtPath(fileDict.path)) {
-        var svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
+        const svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
         svgFile.writeToFile_atomically(newOutputPath, true)
       }
 
