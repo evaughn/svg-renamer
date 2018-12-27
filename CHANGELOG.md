@@ -1,6 +1,11 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 2.0.1
+### Changed
+ - Refactored core code for deletion of singular files and group files
+ - Added `Cancel` option for prefix settings
+
 ## 2.0.0
 ### Changed
  - Major refactor of core code to address Sketch crash when exporting a large number of files
