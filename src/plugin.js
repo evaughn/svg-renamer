@@ -14,7 +14,7 @@ export function showSettings() {
     message: "This plugin allows for renaming of SVG exports.",
     detail: "Artboard Name: Foo => foo.svg\nArtboard Name: Foo\\Bar => foo-bar.svg",
     checkboxLabel: "Use `icon-` prefix",
-    buttons: ['Save', 'Reset'],
+    buttons: ['Save', 'Reset', 'Cancel'],
     checkboxChecked: userDefaults.objectForKey("useDefaultPrefix") != nil
       ? userDefaults.objectForKey("useDefaultPrefix") == 1 
       : true,
@@ -22,7 +22,7 @@ export function showSettings() {
 
     if (response == 0) { // Clicked Save
       userDefaults.setObject_forKey(checkboxChecked, "useDefaultPrefix");
-    } else { // reset
+    } else if (response == 1) { // reset
       userDefaults.setObject_forKey(1, "useDefaultPrefix");
     }
 
@@ -46,7 +46,8 @@ export function renameExport(context) {
   log("RUNNING EXPORT");
   const fileManager = NSFileManager.defaultManager();
   const { useDefaultPrefix, customSuffix } = getUserDefaults();
-  const exports = context.actionContext.exports;
+  const { exports } = context.actionContext;
+
   let filesToRename = [];
 
   for (let i = 0; i < exports.length; i++) {
@@ -80,20 +81,40 @@ export function renameExport(context) {
 
       const newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
 
+      let groupName;
+      let filePath;
+
       if (isDirectory) {
-        const pathArray = fileDict.path.split("/");
-        const directoryPath = pathArray
-          .splice(0, pathArray.length - 1)
-          .join("/");
-        if (!dictionary[categoryName]) {
-          dictionary[categoryName] = {
-            path: directoryPath
+        const pathArray = fileDict.path.split(artboardName);
+        const parentGroupName = artboardName.split("/")[0];
+        groupName = categoryName;
+        filePath = `${pathArray[0]}${parentGroupName}`;
+      } else {
+        groupName = typeName;
+        filePath = fileDict.path;
+      }
+
+      if (!dictionary[groupName]) {
+        dictionary[groupName] = {
+          path: filePath,
+          isDirectory: isDirectory
+        }
+      } else if (dictionary[groupName]) {
+        if (isDirectory && !dictionary[groupName].isDirectory) {
+          // if the first item in the group doesn't have a backslash, it gets assigned as a regular path
+          // here, we're defining the group path
+          dictionary[`${groupName}-group`] = {
+            path: filePath
           }
         }
-       } else {
-        dictionary[typeName] = {
-          path: fileDict.path
-        };
+
+        if (!isDirectory && dictionary[groupName].isDirectory) {
+          // if the first item in the group doesn't have a backslash, it gets assigned as a regular path
+          // here, we're defining the group path
+          dictionary[`${groupName}-single`] = {
+            path: filePath
+          }
+        }
       }
 
       if (fileManager.fileExistsAtPath(fileDict.path)) {

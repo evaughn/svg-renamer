@@ -18463,16 +18463,17 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var defaultPrefix = "icon-";
+var suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
 function showSettings() {
   log("SHOWING OPTIONS");
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
+  var userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   var response = _skpm_dialog__WEBPACK_IMPORTED_MODULE_1___default.a.showMessageBox({
     type: "info",
     title: "About SVG Export Renamer",
     message: "This plugin allows for renaming of SVG exports.",
     detail: "Artboard Name: Foo => foo.svg\nArtboard Name: Foo\\Bar => foo-bar.svg",
     checkboxLabel: "Use `icon-` prefix",
-    buttons: ['Save', 'Reset'],
+    buttons: ['Save', 'Reset', 'Cancel'],
     checkboxChecked: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true
   }, function (_ref) {
     var response = _ref.response,
@@ -18481,7 +18482,7 @@ function showSettings() {
     if (response == 0) {
       // Clicked Save
       userDefaults.setObject_forKey(checkboxChecked, "useDefaultPrefix");
-    } else {
+    } else if (response == 1) {
       // reset
       userDefaults.setObject_forKey(1, "useDefaultPrefix");
     }
@@ -18490,11 +18491,25 @@ function showSettings() {
   });
 }
 ;
+
+function getUserDefaults() {
+  var userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
+  var useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true;
+  var customSuffix = userDefaults.objectForKey("customSuffix") != nil ? useDefaults.objectForKey("customSuffix") : false;
+  return {
+    useDefaultPrefix: useDefaultPrefix,
+    customSuffix: customSuffix
+  };
+}
+
 function renameExport(context) {
   log("RUNNING EXPORT");
   var fileManager = NSFileManager.defaultManager();
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.sketchapp.plugins.svg-export-renamer.defaults");
-  var useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true;
+
+  var _getUserDefaults = getUserDefaults(),
+      useDefaultPrefix = _getUserDefaults.useDefaultPrefix,
+      customSuffix = _getUserDefaults.customSuffix;
+
   var exports = context.actionContext.exports;
   var filesToRename = [];
 
@@ -18510,6 +18525,7 @@ function renameExport(context) {
     var oldFiles = {};
     var oldFilePaths = filesToRename.reduce(function (dictionary, fileDict) {
       var artboardName = fileDict.request.name();
+      var exportName = "";
       var name = artboardName.toLowerCase();
       name = name.replace(/\s/g, "-");
       name = name.replace(/\&/g, "and");
@@ -18518,7 +18534,6 @@ function renameExport(context) {
       var categoryName = nameArray[0];
       var typeName = nameArray[nameArray.length - 1];
       var isDirectory = nameArray.length > 1;
-      var exportName = "";
 
       if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
         exportName = useDefaultPrefix ? "".concat(defaultPrefix).concat(categoryName) : categoryName;
@@ -18527,20 +18542,40 @@ function renameExport(context) {
       }
 
       var newOutputPath = fileDict.path.replace("".concat(artboardName, ".svg"), "".concat(exportName, ".svg"));
+      var groupName;
+      var filePath;
 
       if (isDirectory) {
-        var pathArray = fileDict.path.split("/");
-        var directoryPath = pathArray.splice(0, pathArray.length - 1).join("/");
+        var pathArray = fileDict.path.split(artboardName);
+        var parentGroupName = artboardName.split("/")[0];
+        groupName = categoryName;
+        filePath = "".concat(pathArray[0]).concat(parentGroupName);
+      } else {
+        groupName = typeName;
+        filePath = fileDict.path;
+      }
 
-        if (!dictionary[categoryName]) {
-          dictionary[categoryName] = {
-            path: directoryPath
+      if (!dictionary[groupName]) {
+        dictionary[groupName] = {
+          path: filePath,
+          isDirectory: isDirectory
+        };
+      } else if (dictionary[groupName]) {
+        if (isDirectory && !dictionary[groupName].isDirectory) {
+          // if the first item in the group doesn't have a backslash, it gets assigned as a regular path
+          // here, we're defining the group path
+          dictionary["".concat(groupName, "-group")] = {
+            path: filePath
           };
         }
-      } else {
-        dictionary[typeName] = {
-          path: fileDict.path
-        };
+
+        if (!isDirectory && dictionary[groupName].isDirectory) {
+          // if the first item in the group doesn't have a backslash, it gets assigned as a regular path
+          // here, we're defining the group path
+          dictionary["".concat(groupName, "-single")] = {
+            path: filePath
+          };
+        }
       }
 
       if (fileManager.fileExistsAtPath(fileDict.path)) {
