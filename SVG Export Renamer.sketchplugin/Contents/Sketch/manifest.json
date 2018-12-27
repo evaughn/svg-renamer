@@ -21,7 +21,7 @@
       "script": "plugin.js"
     }
   ],
-  "version": "2.0.0",
+  "version": "2.0.1",
   "disableCocoaScriptPreprocessor": true,
   "appcast": "https://raw.githubusercontent.com//master/.appcast.xml"
 }
