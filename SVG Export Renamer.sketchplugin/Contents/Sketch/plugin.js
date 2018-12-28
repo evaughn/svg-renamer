@@ -18464,40 +18464,139 @@ __webpack_require__.r(__webpack_exports__);
 
 var defaultPrefix = "icon-";
 var suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
-function showSettings() {
-  log("SHOWING OPTIONS");
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
-  var response = _skpm_dialog__WEBPACK_IMPORTED_MODULE_1___default.a.showMessageBox({
-    type: "info",
-    title: "About SVG Export Renamer",
-    message: "This plugin allows for renaming of SVG exports.",
-    detail: "Artboard Name: Foo => foo.svg\nArtboard Name: Foo\\Bar => foo-bar.svg",
-    checkboxLabel: "Use `icon-` prefix",
-    buttons: ['Save', 'Reset', 'Cancel'],
-    checkboxChecked: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true
-  }, function (_ref) {
-    var response = _ref.response,
-        checkboxChecked = _ref.checkboxChecked;
 
-    if (response == 0) {
-      // Clicked Save
-      userDefaults.setObject_forKey(checkboxChecked, "useDefaultPrefix");
-    } else if (response == 1) {
-      // reset
-      userDefaults.setObject_forKey(1, "useDefaultPrefix");
-    }
+function showDialog(context) {
+  var settingsDialog = COSAlertWindow.new();
+  settingsDialog.setMessageText("This plugin allows for renaming of SVG exports.");
+  settingsDialog.informativeText = "You can change the settings for use of default prefix and suffix for this plugin\n\n    By default, there is no suffix, and the prefix used is \"icon-\".";
+  settingsDialog.addButtonWithTitle("Save");
+  settingsDialog.addButtonWithTitle("Reset");
+  settingsDialog.addButtonWithTitle("Cancel");
+  var viewWidth = 300;
+  var viewHeight = 400;
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, viewWidth, viewHeight));
+  settingsDialog.addAccessoryView(view); // Creating the input
 
-    userDefaults.synchronize();
-  });
+  var dropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 230, viewWidth / 2, 22)); // Filling the PopUpButton with options
+
+  dropdown.addItemWithTitle("Prefix Settings");
+  dropdown.addItemWithTitle("Suffix Settings"); // Adding the PopUpButton to the dialog
+
+  view.addSubview(dropdown);
+  var prefixView = createPrefixView(); //const suffixView = createSuffixOptions(view);
+
+  view.addSubview(prefixView);
+  return [settingsDialog];
 }
-;
+
+var enableCustomField = function enableCustomField(sender, customField) {
+  var turnOn = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  customField.enabled = turnOn;
+  log(sender.title() + " radio button was clicked");
+};
+
+function createPrefixView() {
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, 200, 150));
+  var noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 50, 400, 25));
+  noPrefixBtn.setButtonType(NSRadioButton);
+  noPrefixBtn.setTitle("No prefix");
+  var defaultPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 75, 400, 25));
+  defaultPrefixBtn.setButtonType(NSRadioButton);
+  defaultPrefixBtn.setTitle("Use `icon` prefix");
+  var customPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 100, 400, 25));
+  customPrefixBtn.setButtonType(NSRadioButton);
+  customPrefixBtn.setTitle("Custom prefix:");
+  var customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, 125, 130, 20));
+  customPrefixTextField.enabled = false;
+  noPrefixBtn.setCOSJSTargetFunction(function (sender) {
+    return enableCustomField(sender, customPrefixTextField);
+  });
+  defaultPrefixBtn.setCOSJSTargetFunction(function (sender) {
+    return enableCustomField(sender, customPrefixTextField);
+  });
+  customPrefixBtn.setCOSJSTargetFunction(function (sender) {
+    return enableCustomField(sender, customPrefixTextField, true);
+  });
+  view.addSubview(noPrefixBtn);
+  view.addSubview(defaultPrefixBtn);
+  view.addSubview(customPrefixBtn);
+  view.addSubview(customPrefixTextField);
+  return view;
+}
+
+function createSuffixView() {
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, 200, 150));
+  var noSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 50, 400, 25));
+  noSuffixBtn.setButtonType(NSRadioButton);
+  noSuffixBtn.setTitle("No suffix");
+  var customSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 100, 400, 25));
+  customSuffixBtn.setButtonType(NSRadioButton);
+  customSuffixBtn.setTitle("Custom suffix:");
+  var customSuffixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, 125, 130, 20));
+  customSuffixField.enabled = false;
+  noSuffixBtn.setCOSJSTargetFunction(function (sender) {
+    return enableCustomField(sender, customSuffixTextField);
+  });
+  customSuffixBtn.setCOSJSTargetFunction(function (sender) {
+    return enableCustomField(sender, customSuffixTextField, true);
+  });
+  view.addSubview(noSuffixBtn);
+  view.addSubview(customSuffixBtn);
+  view.addSubview(customSuffixTextField);
+  return view;
+} // Todo version 3: New UI for default prefix/suffix
+
+/**
+     _______________
+    | Prefix    ^  |
+
+     • No prefix
+     • Use `icon-` prefix
+     • Use custom prefix:  |____________|
+
+
+    _______________
+    | Suffix    ^  |
+
+     • No suffix
+     • Use custom suffix:  |____________|
+ */
+
+
+function showSettings(context) {
+  log("SHOWING OPTIONS");
+  var window = showDialog(context);
+  var alert = window[0];
+  var response = alert.runModal(); // const userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
+  // const response = dialog.showMessageBox({
+  //   type: "info",
+  //   title: "About SVG Export Renamer",
+  //   message: "This plugin allows for renaming of SVG exports.",
+  //   detail: "Artboard Name: Foo => foo.svg\nArtboard Name: Foo\\Bar => foo-bar.svg",
+  //   checkboxLabel: "Use `icon-` prefix",
+  //   buttons: ['Save', 'Reset', 'Cancel'],
+  //   checkboxChecked: userDefaults.objectForKey("useDefaultPrefix") != nil
+  //     ? userDefaults.objectForKey("useDefaultPrefix") == 1 
+  //     : true,
+  // }, ({ response, checkboxChecked}) => {
+  //   if (response == 0) { // Clicked Save
+  //     userDefaults.setObject_forKey(checkboxChecked, "useDefaultPrefix");
+  //   } else if (response == 1) { // reset
+  //     userDefaults.setObject_forKey(1, "useDefaultPrefix");
+  //   }
+  //   userDefaults.synchronize();
+  // });
+}
+; // Todo version 3: grab defaults from user preferences
 
 function getUserDefaults() {
   var userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   var useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true;
+  var customPrefix = userDefaults.objectForKey("customPrefix");
   var customSuffix = userDefaults.objectForKey("customSuffix") != nil ? useDefaults.objectForKey("customSuffix") : false;
   return {
     useDefaultPrefix: useDefaultPrefix,
+    customPrefix: customPrefix,
     customSuffix: customSuffix
   };
 }
