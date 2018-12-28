@@ -9,16 +9,6 @@ let useCustomSuffix;
 let customPrefixTextField;
 let customSuffixTextField;
 
-export function getDefaults() {
-  userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
-  const prefixSettings = getPrefixSettings(true);
-  const suffixSettings = getSuffixSettings(true);
-  return {
-    ...prefixSettings,
-    ...suffixSettings
-  }
-};
-
 export function showDialog(context) {
   userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   const settingsDialog = COSAlertWindow.new();
@@ -100,6 +90,9 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
 
   customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, (baseY - 75), 130, 20));
   customPrefixTextField.enabled = userUseCustom;
+  if (userDefaults.objectForKey("customPrefix") != nil) {
+    customPrefixTextField.setStringValue(userDefaults.objectForKey("customPrefix"));
+  }
 
   noPrefixBtn.setCOSJSTargetFunction(sender => {
     usePrefix = false;
@@ -146,10 +139,14 @@ function createSuffixView(parentViewWidth, parentViewHeight) {
   customSuffixBtn.setButtonType(NSRadioButton);
   customSuffixBtn.setTitle("Custom suffix:");
   customSuffixBtn.setState(customSuffixSetting);
+
   customSuffixTextField = NSTextField.alloc().initWithFrame(
     NSMakeRect(20, baseY - 50, 130, 20)
   );
   customSuffixTextField.enabled = userUseSuffix;
+  if (userDefaults.objectForKey("customSuffix") != nil) {
+    customSuffixTextField.setStringValue(userDefaults.objectForKey("customSuffix"));
+  }
 
   noSuffixBtn.setCOSJSTargetFunction(sender => {
     useCustomSuffix = false;
@@ -194,6 +191,17 @@ function getSuffixSettings(useBoolValues = false) {
     customSuffixSetting: userDefaults.objectForKey("useCustomSuffix") != nil
       ? userDefaults.objectForKey("useCustomSuffix") == 1 ? trueVal : falseVal
       : falseVal,
+  }
+}
+
+export function getDefaults() {
+  userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
+  return {
+    usePrefix: userDefaults.objectForKey("usePrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 : false,
+    useDefaultPrefix: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : false,
+    customPrefix: userDefaults.objectForKey("customPrefix") != nil ? userDefaults.objectForKey("customPrefix") : null,
+    useCustomSuffix: userDefaults.objectForKey("useCustomSuffix") != nil ? userDefaults.objectForKey("useCustomSuffix") == 1 : false,
+    customSuffix: userDefaults.objectForKey("customSuffix") != nil ? userDefaults.objectForKey("customSuffix") : null,
   }
 }
 

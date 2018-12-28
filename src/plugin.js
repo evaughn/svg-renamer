@@ -8,9 +8,7 @@ import {
   resetPreferences
 } from "./dialog";
 
-// export { showSettings } from "./dialog";
-
-const defaultPrefix = "icon-";
+const defaultPrefix = "icon";
 
 export function showSettings(context) {
   log("SHOWING OPTIONS");
@@ -25,13 +23,32 @@ export function showSettings(context) {
   }
 }
 
+function configureName(name) {
+  const { usePrefix, useDefaultPrefix, customPrefix, useCustomSuffix, customSuffix } = getDefaults();
+  const pluginUseDefaultPrefix = usePrefix && useDefaultPrefix;
+  const pluginUseCustomPrefix = usePrefix && !useDefaultPrefix;
+  
+  if (usePrefix) {
+    if (pluginUseDefaultPrefix) {
+      name = `${defaultPrefix}-${name}`;
+    }
+
+    if (pluginUseCustomPrefix) {
+      name = `${customPrefix}-${name}`;
+    }
+  }
+
+  if (useCustomSuffix) {
+    name += `-${customSuffix}`;
+  }
+
+  return name;
+}
+
 export function renameExport(context) {
   log("RUNNING EXPORT");
   const fileManager = NSFileManager.defaultManager();
-  const { noPrefixSetting, defaultPrefixSetting } = getDefaults();
   const { exports } = context.actionContext;
-
-  const useDefaultPrefix = !noPrefixSetting && defaultPrefixSetting;
 
   let filesToRename = [];
 
@@ -59,9 +76,9 @@ export function renameExport(context) {
       const isDirectory = nameArray.length > 1;
 
       if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
-        exportName = useDefaultPrefix ? `${defaultPrefix}${categoryName}` : categoryName;
+        exportName = configureName(categoryName);
       } else {
-        exportName = useDefaultPrefix ? `${defaultPrefix}${categoryName}-${typeName}` : `${categoryName}-${typeName}`;
+        exportName = configureName(`${categoryName}-${typeName}`);
       }
 
       const newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
@@ -110,6 +127,7 @@ export function renameExport(context) {
       return dictionary;
     }, {});
 
+    // TODO: figure out how to keep file when not using prefix
     Promise.all(map(oldFilePaths, (oldFilePath) => {
       if(fileManager.fileExistsAtPath(oldFilePath.path)) {
         try {

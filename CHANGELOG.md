@@ -1,6 +1,14 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.0.0
+### Added
+ - Ability to use global suffix
+ - Ability to use default or custom prefix
+### Changed
+ - Refactored core dialog code for prefix/suffix update
+ - New dropdown in UI to toggle betweem prefix/suffix settings
+
 ## 2.0.1
 ### Changed
  - Refactored core code for deletion of singular files and group files
