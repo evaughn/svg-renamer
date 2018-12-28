@@ -83,6 +83,11 @@ export function renameExport(context) {
 
       const newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
 
+      if (fileManager.fileExistsAtPath(fileDict.path)) {
+        const svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
+        svgFile.writeToFile_atomically(newOutputPath, true);
+      }
+
       let groupName;
       let filePath;
 
@@ -117,11 +122,6 @@ export function renameExport(context) {
             path: filePath
           }
         }
-      }
-
-      if (fileManager.fileExistsAtPath(fileDict.path)) {
-        const svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
-        svgFile.writeToFile_atomically(newOutputPath, false)
       }
 
       return dictionary;

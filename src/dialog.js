@@ -64,11 +64,7 @@ const enableCustomField = (sender, customField, turnOn = false) => {
 
 function createPrefixView(parentViewWidth, parentViewHeight) {
   const { noPrefixSetting, defaultPrefixSetting, customPrefixSetting } = getPrefixSettings();
-  const { 
-    noPrefixSetting: userUsePrefix,
-    defaultPrefixSetting: userUseDefault,
-    customPrefixSetting: userUseCustom
-  } = getPrefixSettings(true);
+  const { usePrefix: userUsePrefix, useDefaultPrefix: userUseDefault } = getDefaults();
   const baseY = parentViewHeight - 75;
   const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 200));
   const noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
@@ -89,7 +85,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
   customPrefixBtn.setState(customPrefixSetting);
 
   customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, (baseY - 75), 130, 20));
-  customPrefixTextField.enabled = userUseCustom;
+  customPrefixTextField.enabled = usePrefix && !useDefaultPrefix;
   if (userDefaults.objectForKey("customPrefix") != nil) {
     customPrefixTextField.setStringValue(userDefaults.objectForKey("customPrefix"));
   }
@@ -120,7 +116,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
 
 function createSuffixView(parentViewWidth, parentViewHeight) {
   const { noSuffixSetting, customSuffixSetting } = getSuffixSettings();
-  const { customSuffixSetting: userUseSuffix } = getSuffixSettings(true);
+  const { useCustomSuffix: userUseSuffix } = getDefaults();
   const baseY = parentViewHeight - 75;
   const view = NSView.alloc().initWithFrame(
     NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 200)
@@ -165,40 +161,36 @@ function createSuffixView(parentViewWidth, parentViewHeight) {
   return view;
 }
 
-function getPrefixSettings(useBoolValues = false) {
-  const trueVal = useBoolValues ? true : NSOnState;
-  const falseVal = useBoolValues ? false : NSOffState;
+function getPrefixSettings() {
   return {
     noPrefixSetting: userDefaults.objectForKey("usePrefix") != nil && userDefaults.objectForKey("useDefaultPrefix") != nil
-      ? (userDefaults.objectForKey("usePrefix") != 1 && userDefaults.objectForKey("useDefaultPrefix") != 1) ? trueVal : falseVal
-      : falseVal,
+      ? (userDefaults.objectForKey("usePrefix") != 1 && userDefaults.objectForKey("useDefaultPrefix") != 1) ? NSOnState : NSOffState
+      : NSOffState,
     defaultPrefixSetting: userDefaults.objectForKey("usePrefix") != nil && userDefaults.objectForKey("useDefaultPrefix") != nil
-      ? (userDefaults.objectForKey("usePrefix") == 1 && userDefaults.objectForKey("useDefaultPrefix") == 1 )? trueVal : falseVal
-      : trueVal,
+      ? (userDefaults.objectForKey("usePrefix") == 1 && userDefaults.objectForKey("useDefaultPrefix") == 1 )? NSOnState : NSOffState
+      : NSOnState,
     customPrefixSetting: userDefaults.objectForKey("usePrefix") != nil && userDefaults.objectForKey("useDefaultPrefix") != nil
-      ? (userDefaults.objectForKey("usePrefix") == 1 && userDefaults.objectForKey("useDefaultPrefix") != 1 )? trueVal : falseVal
-      : falseVal
+      ? (userDefaults.objectForKey("usePrefix") == 1 && userDefaults.objectForKey("useDefaultPrefix") != 1 )? NSOnState : NSOffState
+      : NSOffState
   }
 }
 
-function getSuffixSettings(useBoolValues = false) {
-  const trueVal = useBoolValues ? true : trueVal;
-  const falseVal = useBoolValues ? false : NSOffState;
+function getSuffixSettings() {
   return {
     noSuffixSetting: userDefaults.objectForKey("useCustomSuffix") != nil
-      ? userDefaults.objectForKey("useCustomSuffix") == 1 ? falseVal : trueVal
-      : trueVal,
+      ? userDefaults.objectForKey("useCustomSuffix") == 1 ? NSOffState : NSOnState
+      : NSOnState,
     customSuffixSetting: userDefaults.objectForKey("useCustomSuffix") != nil
-      ? userDefaults.objectForKey("useCustomSuffix") == 1 ? trueVal : falseVal
-      : falseVal,
+      ? userDefaults.objectForKey("useCustomSuffix") == 1 ? NSOnState : NSOffState
+      : NSOffState,
   }
 }
 
 export function getDefaults() {
   userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   return {
-    usePrefix: userDefaults.objectForKey("usePrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 : false,
-    useDefaultPrefix: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : false,
+    usePrefix: userDefaults.objectForKey("usePrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 : true,
+    useDefaultPrefix: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true,
     customPrefix: userDefaults.objectForKey("customPrefix") != nil ? userDefaults.objectForKey("customPrefix") : null,
     useCustomSuffix: userDefaults.objectForKey("useCustomSuffix") != nil ? userDefaults.objectForKey("useCustomSuffix") == 1 : false,
     customSuffix: userDefaults.objectForKey("customSuffix") != nil ? userDefaults.objectForKey("customSuffix") : null,
