@@ -1,6 +1,10 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.0.1
+### Changed
+ - Fixed bug with pressing save but making no changes in About dialog
+
 ## 3.0.0
 ### Added
  - Ability to use global suffix
