@@ -22,7 +22,7 @@ By default, there is no suffix, and the prefix used is "icon-".`);
   settingsDialog.addButtonWithTitle("Cancel");
 
   const viewWidth = 300;
-  const viewHeight = 200;
+  const viewHeight = 150;
 
   const view = NSView.alloc().initWithFrame(NSMakeRect(0,0, viewWidth, viewHeight));
   settingsDialog.addAccessoryView(view);
@@ -65,7 +65,7 @@ const enableCustomField = (sender, customField, turnOn = false) => {
 function createPrefixView(parentViewWidth, parentViewHeight) {
   const { noPrefixSetting, defaultPrefixSetting, customPrefixSetting } = getPrefixSettings();
   const { usePrefix: userUsePrefix, useDefaultPrefix: userUseDefault } = getDefaults();
-  const baseY = parentViewHeight - 75;
+  const baseY = parentViewHeight - 25;
   const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 200));
   const noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noPrefixBtn.setButtonType(NSRadioButton);
@@ -117,7 +117,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
 function createSuffixView(parentViewWidth, parentViewHeight) {
   const { noSuffixSetting, customSuffixSetting } = getSuffixSettings();
   const { useCustomSuffix: userUseSuffix } = getDefaults();
-  const baseY = parentViewHeight - 75;
+  const baseY = parentViewHeight - 25;
   const view = NSView.alloc().initWithFrame(
     NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 200)
   );
