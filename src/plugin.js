@@ -24,9 +24,21 @@ export function showSettings(context) {
 }
 
 function configureName(name) {
-  const { usePrefix, useDefaultPrefix, customPrefix, useCustomSuffix, customSuffix } = getDefaults();
+  const { 
+    overrideArtboard,
+    usePrefix,
+    useDefaultPrefix,
+    customPrefix,
+    useCustomSuffix,
+    customSuffix 
+  } = getDefaults();
+
   const pluginUseDefaultPrefix = usePrefix && useDefaultPrefix;
   const pluginUseCustomPrefix = usePrefix && !useDefaultPrefix;
+
+  if (!overrideArtboard) {
+    return name;
+  }
   
   if (usePrefix) {
     if (pluginUseDefaultPrefix) {
@@ -43,6 +55,12 @@ function configureName(name) {
   }
 
   return name;
+}
+
+function getOverrideName(fileName, artboardName) {
+  const { overrideArtboard } = getDefaults();
+  const overrideName = overrideArtboard ? artboardName : fileName;
+  return overrideName.toLowerCase();
 }
 
 export function renameExport(context) {
@@ -62,9 +80,10 @@ export function renameExport(context) {
   if (filesToRename.length > 0) {
     let oldFiles = {};
     const oldFilePaths = filesToRename.reduce((dictionary, fileDict) => {
-      const artboardName = fileDict.request.name();
+      const fileName = fileDict.request.name();
+      const artboardName = fileDict.request.rootLayer().name();
       let exportName = "";
-      let name = artboardName.toLowerCase();
+      let name = getOverrideName(fileName, artboardName);
 
       name = name.replace(/\s/g, "-");
       name = name.replace(/\&/g, "and");
@@ -81,7 +100,7 @@ export function renameExport(context) {
         exportName = configureName(`${categoryName}-${typeName}`);
       }
 
-      const newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
+      const newOutputPath = fileDict.path.replace(`${fileName}.svg`, `${exportName}.svg`);
       
       // creates new NSMutableDictionary to reassign the export path
       const newExportDictionary = NSMutableDictionary.alloc().init();

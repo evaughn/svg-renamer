@@ -3,6 +3,7 @@ import sketch from "sketch"
 export const suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
 
 let userDefaults;
+let overrideArtboard;
 let usePrefix;
 let useDefaultPrefix;
 let useCustomSuffix;
@@ -27,13 +28,25 @@ By default, there is no suffix, and the prefix used is "icon-".`);
   settingsDialog.addButtonWithTitle("Cancel");
 
   const viewWidth = 300;
-  const viewHeight = 150;
+  const viewHeight = 210;
 
   const view = NSView.alloc().initWithFrame(NSMakeRect(0,0, viewWidth, viewHeight));
   settingsDialog.addAccessoryView(view);
 
+  // Add checkbox for override
+  const checkbox = NSButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 25, viewWidth, 20));
+  overrideArtboard = getDefaults().overrideArtboard; 
+  // Setting the options for the checkbox
+  checkbox.setButtonType(NSSwitchButton);
+  checkbox.setBezelStyle(0);
+  checkbox.setTitle("Override prefix/suffix settings on artboard");
+  checkbox.setState(getDefaults().overrideArtboard ? NSOnState : NSOffState);
+  checkbox.setCOSJSTargetFunction(sender => {
+    overrideArtboard = !overrideArtboard;
+  });
+
   // Adding the PopUpButton to the dialog
-  const dropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 25, viewWidth / 2, 22));
+  const dropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 65, viewWidth / 2, 22));
   
   // Filling the PopUpButton with options
   dropdown.addItemWithTitle("Prefix Settings");
@@ -55,6 +68,7 @@ By default, there is no suffix, and the prefix used is "icon-".`);
   };
 
   dropdown.setCOSJSTargetFunction(sender => switchView(sender));
+  view.addSubview(checkbox);
   view.addSubview(dropdown);
   view.addSubview(prefixView);
   view.addSubview(suffixView);
@@ -70,7 +84,7 @@ const enableCustomField = (sender, customField, turnOn = false) => {
 function createPrefixView(parentViewWidth, parentViewHeight) {
   const { noPrefixSetting, defaultPrefixSetting, customPrefixSetting } = getPrefixSettings();
   const { usePrefix: userUsePrefix, useDefaultPrefix: userUseDefault } = getDefaults();
-  const baseY = parentViewHeight - 25;
+  const baseY = parentViewHeight - 120;
   const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 200));
   const noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noPrefixBtn.setButtonType(NSRadioButton);
@@ -122,7 +136,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
 function createSuffixView(parentViewWidth, parentViewHeight) {
   const { noSuffixSetting, customSuffixSetting } = getSuffixSettings();
   const { useCustomSuffix: userUseSuffix } = getDefaults();
-  const baseY = parentViewHeight - 25;
+  const baseY = parentViewHeight - 120;
   const view = NSView.alloc().initWithFrame(
     NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 200)
   );
@@ -194,6 +208,7 @@ function getSuffixSettings() {
 export function getDefaults() {
   userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   return {
+    overrideArtboard: userDefaults.objectForKey("overrideArtboard") != nil ? userDefaults.objectForKey("overrideArtboard") == 1 : true,
     usePrefix: userDefaults.objectForKey("usePrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 : true,
     useDefaultPrefix: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true,
     customPrefix: userDefaults.objectForKey("customPrefix") != nil ? userDefaults.objectForKey("customPrefix") : null,
@@ -203,15 +218,19 @@ export function getDefaults() {
 }
 
 export function savePreferences() {
+  userDefaults.setObject_forKey(overrideArtboard, "overrideArtboard");
   userDefaults.setObject_forKey(usePrefix, "usePrefix");
   userDefaults.setObject_forKey(useDefaultPrefix, "useDefaultPrefix");
-  userDefaults.setObject_forKey(customPrefixTextField.stringValue(), "customPrefix");
+  userDefaults.setObject_forKey(customPrefixTextField.stringValue().replace(/\W/, ""), "customPrefix");
   userDefaults.setObject_forKey(useCustomSuffix, "useCustomSuffix");
-  userDefaults.setObject_forKey(customSuffixTextField.stringValue(), "customSuffix");
+  userDefaults.setObject_forKey(customSuffixTextField
+      .stringValue()
+      .replace(/\W/, ""), "customSuffix");
   userDefaults.synchronize();
 }
 
 export function resetPreferences() {
+  userDefaults.setObject_forKey(true, "overrideArtboard");
   userDefaults.setObject_forKey(true, "usePrefix");
   userDefaults.setObject_forKey(true, "useDefaultPrefix");
   userDefaults.setObject_forKey(nil, "customPrefix");
