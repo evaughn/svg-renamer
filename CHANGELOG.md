@@ -4,6 +4,7 @@ Documents all notable changes made to the SVG Export Renamer plugin
 ## 3.1.0
 ### Added
  - Plugin icon in About dialog
+
 ### Changed
  - Fixed bug with export name being the same without prefix/suffix 🎉
 
@@ -15,6 +16,7 @@ Documents all notable changes made to the SVG Export Renamer plugin
 ### Added
  - Ability to use global suffix
  - Ability to use default or custom prefix
+
 ### Changed
  - Refactored core dialog code for prefix/suffix update
  - New dropdown in UI to toggle betweem prefix/suffix settings
