@@ -17875,7 +17875,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dialog__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./dialog */ "./src/dialog.js");
 
 
- // export { showSettings } from "./dialog";
 
 var defaultPrefix = "icon-";
 function showSettings(context) {
