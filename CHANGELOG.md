@@ -1,6 +1,10 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.1.0
+### Changed
+ - Fixed bug with export name being the same without prefix/suffix 🎉
+
 ## 3.0.1
 ### Changed
  - Fixed bug with pressing save but making no changes in About dialog
