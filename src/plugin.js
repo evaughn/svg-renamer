@@ -82,6 +82,13 @@ export function renameExport(context) {
       }
 
       const newOutputPath = fileDict.path.replace(`${artboardName}.svg`, `${exportName}.svg`);
+      
+      // creates new NSMutableDictionary to reassign the export path
+      const newExportDictionary = NSMutableDictionary.alloc().init();
+      const oldFileIndex = exports.indexOfObjectIdenticalTo(fileDict);
+      newExportDictionary.setValue_forKey(newOutputPath, "path");
+      newExportDictionary.setValue_forKey(fileDict.request, "request");
+      context.actionContext.exports.replaceObjectAtIndex_withObject(oldFileIndex, newExportDictionary);
 
       if (fileManager.fileExistsAtPath(fileDict.path)) {
         const svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
@@ -152,6 +159,7 @@ export function renameExport(context) {
     .then(() => {
       log("All svgs were successfully renamed");
       sketch.UI.message("All svgs were successfully renamed");
+      return context;
     }).catch((error) => {
       log(error);
       sketch.UI.message(error);
