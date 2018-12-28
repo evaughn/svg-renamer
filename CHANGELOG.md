@@ -1,6 +1,11 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.2.0
+### Added
+ - Make plugin useful with other plugins - replaces old export path with new
+   export path in context array
+
 ## 3.1.0
 ### Added
  - Plugin icon in About dialog
