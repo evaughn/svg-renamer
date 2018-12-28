@@ -85,7 +85,20 @@ export function renameExport(context) {
 
       if (fileManager.fileExistsAtPath(fileDict.path)) {
         const svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
-        svgFile.writeToFile_atomically(newOutputPath, true);
+        if (name === exportName) {
+          // This is a case where the icon and artboard name wind up being the same:
+          // we need to remove the old file before writing the new file to disk
+          try {
+            fileManager.removeItemAtPath_error(fileDict.path, "Error in deleting source icon");
+            svgFile.writeToFile_atomically(newOutputPath, true);
+            return dictionary;
+          } catch (e) {
+            return Promise.reject(`Error in deleting source icon: ${e}`);
+          }
+        } else {
+          const svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
+          svgFile.writeToFile_atomically(newOutputPath, true);
+        }
       }
 
       let groupName;
@@ -127,7 +140,6 @@ export function renameExport(context) {
       return dictionary;
     }, {});
 
-    // TODO: figure out how to keep file when not using prefix
     Promise.all(map(oldFilePaths, (oldFilePath) => {
       if(fileManager.fileExistsAtPath(oldFilePath.path)) {
         try {
