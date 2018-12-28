@@ -91,612 +91,6 @@ var exports =
 /************************************************************************/
 /******/ ({
 
-/***/ "./node_modules/@skpm/dialog/lib/index.js":
-/*!************************************************!*\
-  !*** ./node_modules/@skpm/dialog/lib/index.js ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* let's try to match the API from Electron's Dialog
-(https://github.com/electron/electron/blob/master/docs/api/dialog.md) */
-
-module.exports = {
-  showOpenDialog: __webpack_require__(/*! ./open-dialog */ "./node_modules/@skpm/dialog/lib/open-dialog.js"),
-  showSaveDialog: __webpack_require__(/*! ./save-dialog */ "./node_modules/@skpm/dialog/lib/save-dialog.js"),
-  showMessageBox: __webpack_require__(/*! ./message-box */ "./node_modules/@skpm/dialog/lib/message-box.js"),
-  // showErrorBox: require('./error-box'),
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/@skpm/dialog/lib/message-box.js":
-/*!******************************************************!*\
-  !*** ./node_modules/@skpm/dialog/lib/message-box.js ***!
-  \******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* eslint-disable no-not-accumulator-reassign/no-not-accumulator-reassign */
-var RunDelegate = __webpack_require__(/*! ./run-delegate */ "./node_modules/@skpm/dialog/lib/run-delegate.js")
-
-// https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowmessageboxbrowserwindow-options-callback
-var typeMap = {
-  none: 0,
-  info: 1,
-  error: 2,
-  question: 1,
-  warning: 2,
-}
-module.exports = function messageBox(document, options, callback) {
-  if (!document ||
-    (typeof document.class !== 'function' && !document.sketchObject)
-  ) {
-    callback = options
-    options = document
-    document = undefined
-  } else if (document.sketchObject) {
-    document = document.sketchObject
-  }
-  if (!options) {
-    options = {}
-  }
-
-  var response
-
-  var dialog = NSAlert.alloc().init()
-
-  if (options.type) {
-    dialog.alertStyle = typeMap[options.type] || 0
-  }
-
-  if (options.buttons && options.buttons.length) {
-    options.buttons.forEach(function addButton(button) {
-      dialog.addButtonWithTitle(
-        options.normalizeAccessKeys ? button.replace(/&/g, '') : button
-      )
-      // TODO: add keyboard shortcut if options.normalizeAccessKeys
-    })
-  }
-
-  if (typeof options.defaultId !== 'undefined') {
-    var buttons = dialog.buttons()
-    if (options.defaultId < buttons.length) {
-      // Focus the button at defaultId if the user opted to do so.
-      // The first button added gets set as the default selected.
-      // So remove that default, and make the requested button the default.
-      buttons[0].setKeyEquivalent('')
-      buttons[options.defaultId].setKeyEquivalent('\r')
-    }
-  }
-
-  if (options.title) {
-    // not shown on macOS
-  }
-
-  if (options.message) {
-    dialog.messageText = options.message
-  }
-
-  if (options.detail) {
-    dialog.informativeText = options.detail
-  }
-
-  if (options.checkboxLabel) {
-    dialog.showsSuppressionButton = true
-    dialog.suppressionButton().title = options.checkboxLabel
-
-    if (typeof options.checkboxChecked !== 'undefined') {
-      dialog.suppressionButton().state = options.checkboxChecked ?
-        NSOnState :
-        NSOffState
-    }
-  }
-
-  if (options.icon) {
-    if (typeof options.icon === 'string') {
-      options.icon = NSImage.alloc().initWithContentsOfFile(options.icon)
-    }
-    dialog.icon = options.icon
-  } else if (
-    typeof __command !== 'undefined' &&
-    __command.pluginBundle() &&
-    __command.pluginBundle().icon()
-  ) {
-    dialog.icon = __command.pluginBundle().icon()
-  } else {
-    var icon = NSImage.imageNamed('plugins')
-    if (icon) {
-      dialog.icon = icon
-    }
-  }
-
-  if (!document) {
-    response = Number(dialog.runModal()) - 1000
-    if (callback) {
-      var checkboxChecked = false
-      if (options.checkboxLabel) {
-        checkboxChecked = dialog.suppressionButton().state() == NSOnState
-      }
-      callback({
-        response: response,
-        checkboxChecked: checkboxChecked,
-      })
-      return undefined
-    }
-    return response
-  }
-
-  var delegate = RunDelegate.new()
-
-  dialog.buttons().forEach(function hookButton(button, i) {
-    button.setTarget(delegate)
-    button.setAction(NSSelectorFromString('buttonClicked:'))
-    button.setTag(i)
-  })
-
-  var fiber
-  if (callback) {
-    if (coscript.createFiber) {
-      fiber = coscript.createFiber()
-    } else {
-      coscript.shouldKeepAround = true
-    }
-  }
-
-  delegate.options = NSDictionary.dictionaryWithDictionary({
-    onClicked: function handleEnd(returnCode) {
-      if (callback) {
-        callback({
-          response: Number(returnCode),
-          checkboxChecked: dialog.suppressionButton().state() == NSOnState,
-        })
-        NSApp.endSheet(dialog.window())
-        if (fiber) {
-          fiber.cleanup()
-        } else {
-          coscript.shouldKeepAround = false
-        }
-      } else {
-        NSApp.stopModalWithCode(Number(returnCode))
-      }
-    },
-  })
-
-  var window = (document.sketchObject || document).documentWindow()
-  dialog.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo(
-    window,
-    null,
-    null,
-    null
-  )
-
-  if (!callback) {
-    response = Number(NSApp.runModalForWindow(window))
-    NSApp.endSheet(dialog.window())
-    return response
-  }
-
-  return undefined
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/@skpm/dialog/lib/open-dialog.js":
-/*!******************************************************!*\
-  !*** ./node_modules/@skpm/dialog/lib/open-dialog.js ***!
-  \******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* eslint-disable no-not-accumulator-reassign/no-not-accumulator-reassign */
-var RunDelegate = __webpack_require__(/*! ./run-delegate */ "./node_modules/@skpm/dialog/lib/run-delegate.js")
-var utils = __webpack_require__(/*! ./utils */ "./node_modules/@skpm/dialog/lib/utils.js")
-
-// https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowopendialogbrowserwindow-options-callback
-module.exports = function openDialog(document, options, callback) {
-  if (!document || typeof document.class !== 'function') {
-    callback = options
-    options = document
-    document = undefined
-  }
-  if (!options) {
-    options = {}
-  }
-
-  var dialog = NSOpenPanel.openPanel()
-
-  if (options.title) {
-    dialog.title = options.title
-  }
-
-  if (options.defaultPath) {
-    dialog.setDirectoryURL(utils.getURL(options.defaultPath))
-  }
-
-  if (options.buttonLabel) {
-    dialog.prompt = options.buttonLabel
-  }
-
-  if (options.filters && options.filters.length) {
-    var exts = []
-    options.filters.forEach(function setFilter(filter) {
-      filter.extensions.forEach(function setExtension(ext) {
-        exts.push(ext)
-      })
-    })
-
-    dialog.allowedFileTypes = exts
-  }
-
-  if (options.properties && options.properties.length) {
-    options.properties.forEach(function setProperty(p) {
-      if (p === 'openFile') {
-        dialog.canChooseFiles = true
-      } else if (p === 'openDirectory') {
-        dialog.canChooseDirectories = true
-      } else if (p === 'multiSelections') {
-        dialog.allowsMultipleSelection = true
-      } else if (p === 'showHiddenFiles') {
-        dialog.showsHiddenFiles = true
-      } else if (p === 'createDirectory') {
-        dialog.createDirectory = true
-      } else if (p === 'noResolveAliases') {
-        dialog.resolvesAliases = false
-      } else if (p === 'treatPackageAsDirectory') {
-        dialog.treatsFilePackagesAsDirectories = true
-      }
-    })
-  }
-
-  if (options.message) {
-    dialog.message = options.message
-  }
-
-  var buttonClicked
-
-  function getURLs() {
-    var result = []
-    var urls = dialog.URLs()
-    for (var k = 0; k < urls.length; k += 1) {
-      result.push(String(urls[k].path()))
-    }
-
-    return result
-  }
-
-  if (!document) {
-    buttonClicked = dialog.runModal()
-    if (buttonClicked == NSOKButton) {
-      if (callback) {
-        callback(getURLs())
-        return undefined
-      }
-      return getURLs()
-    }
-
-    return []
-  }
-
-  var nsButtonClass = NSButton.class()
-
-  function findButtonWithTitleInView(title, view) {
-    if (!view || !view.subviews || !view.subviews()) {
-      return undefined
-    }
-    var subviews = view.subviews()
-    for (var i = 0; i < subviews.length; i += 1) {
-      var subview = subviews[i]
-      if (
-        subview.isKindOfClass(nsButtonClass) &&
-        String(subview.title()) == title
-      ) {
-        return subview
-      }
-      var foundButton = findButtonWithTitleInView(title, subview)
-      if (foundButton) {
-        return foundButton
-      }
-    }
-    return undefined
-  }
-
-  var cancelButton = findButtonWithTitleInView('Cancel', dialog.contentView())
-  var okButton = findButtonWithTitleInView(
-    options.buttonLabel || 'Open',
-    dialog.contentView()
-  )
-
-  var delegate = RunDelegate.new()
-
-  cancelButton.setTarget(delegate)
-  cancelButton.setAction(NSSelectorFromString('button1Clicked:'))
-  okButton.setTarget(delegate)
-  okButton.setAction(NSSelectorFromString('button0Clicked:'))
-
-  var fiber
-  if (callback) {
-    if (coscript.createFiber) {
-      fiber = coscript.createFiber()
-    } else {
-      coscript.shouldKeepAround = true
-    }
-  }
-
-  delegate.options = NSDictionary.dictionaryWithDictionary({
-    onClicked: function handleEnd(returnCode) {
-      if (callback) {
-        callback(returnCode == 0 ? getURLs() : undefined)
-        NSApp.endSheet(dialog)
-        if (fiber) {
-          fiber.cleanup()
-        } else {
-          coscript.shouldKeepAround = false
-        }
-      } else {
-        NSApp.stopModalWithCode(returnCode)
-      }
-    },
-  })
-
-  var window = (document.sketchObject || document).documentWindow()
-  dialog.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo(
-    null,
-    null,
-    window,
-    null,
-    null,
-    null
-  )
-
-  if (!callback) {
-    buttonClicked = NSApp.runModalForWindow(window)
-    NSApp.endSheet(dialog)
-    if (buttonClicked == 0) {
-      return getURLs()
-    }
-    return undefined
-  }
-
-  return undefined
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/@skpm/dialog/lib/run-delegate.js":
-/*!*******************************************************!*\
-  !*** ./node_modules/@skpm/dialog/lib/run-delegate.js ***!
-  \*******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var ObjCClass = __webpack_require__(/*! cocoascript-class */ "./node_modules/cocoascript-class/lib/index.js").default
-
-module.exports = new ObjCClass({
-  options: null,
-
-  'buttonClicked:': function handleButtonClicked(sender) {
-    if (this.options.onClicked) {
-      this.options.onClicked(sender.tag())
-    }
-    this.release()
-  },
-
-  'button0Clicked:': function handleButtonClicked() {
-    if (this.options.onClicked) {
-      this.options.onClicked(0)
-    }
-    this.release()
-  },
-
-  'button1Clicked:': function handleButtonClicked() {
-    if (this.options.onClicked) {
-      this.options.onClicked(1)
-    }
-    this.release()
-  },
-})
-
-
-/***/ }),
-
-/***/ "./node_modules/@skpm/dialog/lib/save-dialog.js":
-/*!******************************************************!*\
-  !*** ./node_modules/@skpm/dialog/lib/save-dialog.js ***!
-  \******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* eslint-disable no-not-accumulator-reassign/no-not-accumulator-reassign */
-var RunDelegate = __webpack_require__(/*! ./run-delegate */ "./node_modules/@skpm/dialog/lib/run-delegate.js")
-var utils = __webpack_require__(/*! ./utils */ "./node_modules/@skpm/dialog/lib/utils.js")
-
-// https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowsavedialogbrowserwindow-options-callback
-module.exports = function saveDialog(document, options, callback) {
-  if (!document || typeof document.class !== 'function') {
-    callback = options
-    options = document
-    document = undefined
-  }
-  if (!options) {
-    options = {}
-  }
-
-  var buttonClicked
-  var url
-
-  var dialog = NSSavePanel.savePanel()
-
-  if (options.title) {
-    dialog.title = options.title
-  }
-
-  if (options.defaultPath) {
-    // that's a path
-    dialog.setDirectoryURL(utils.getURL(options.defaultPath))
-
-    if (
-      options.defaultPath[0] === '.' ||
-      options.defaultPath[0] === '~' ||
-      options.defaultPath[0] === '/'
-    ) {
-      var parts = options.defaultPath.split('/')
-      if (parts.length > 1 && parts[parts.length - 1]) {
-        dialog.setNameFieldStringValue(parts[parts.length - 1])
-      }
-    } else {
-      dialog.setNameFieldStringValue(options.defaultPath)
-    }
-  }
-
-  if (options.buttonLabel) {
-    dialog.prompt = options.buttonLabel
-  }
-
-  if (options.filters && options.filters.length) {
-    var exts = []
-    options.filters.forEach(function setFilter(filter) {
-      filter.extensions.forEach(function setExtension(ext) {
-        exts.push(ext)
-      })
-    })
-
-    dialog.allowedFileTypes = exts
-  }
-
-  if (options.message) {
-    dialog.message = options.message
-  }
-
-  if (options.nameFieldLabel) {
-    dialog.nameFieldLabel = options.nameFieldLabel
-  }
-
-  if (options.showsTagField) {
-    dialog.showsTagField = options.showsTagField
-  }
-
-  if (!document) {
-    buttonClicked = dialog.runModal()
-    if (buttonClicked == NSOKButton) {
-      url = String(dialog.URL().path())
-
-      if (callback) {
-        callback(url)
-        return undefined
-      }
-      return url
-    }
-    return undefined
-  }
-
-  var nsButtonClass = NSButton.class()
-
-  function findButtonWithTitleInView(title, view) {
-    if (!view || !view.subviews || !view.subviews()) {
-      return undefined
-    }
-    var subviews = view.subviews()
-    for (var i = 0; i < subviews.length; i += 1) {
-      var subview = subviews[i]
-      if (
-        subview.isKindOfClass(nsButtonClass) &&
-        String(subview.title()) == title
-      ) {
-        return subview
-      }
-      var foundButton = findButtonWithTitleInView(title, subview)
-      if (foundButton) {
-        return foundButton
-      }
-    }
-    return undefined
-  }
-
-  var cancelButton = findButtonWithTitleInView('Cancel', dialog.contentView())
-  var okButton = findButtonWithTitleInView(
-    options.buttonLabel || 'Save',
-    dialog.contentView()
-  )
-
-  var delegate = RunDelegate.new()
-
-  cancelButton.setTarget(delegate)
-  cancelButton.setAction(NSSelectorFromString('button1Clicked:'))
-  okButton.setTarget(delegate)
-  okButton.setAction(NSSelectorFromString('button0Clicked:'))
-
-  var fiber
-  if (callback) {
-    if (coscript.createFiber) {
-      fiber = coscript.createFiber()
-    } else {
-      coscript.shouldKeepAround = true
-    }
-  }
-
-  delegate.options = NSDictionary.dictionaryWithDictionary({
-    onClicked: function handleEnd(returnCode) {
-      if (callback) {
-        callback(returnCode == 0 ? String(dialog.URL().path()) : undefined)
-        NSApp.endSheet(dialog)
-        if (fiber) {
-          fiber.cleanup()
-        } else {
-          coscript.shouldKeepAround = false
-        }
-      } else {
-        NSApp.stopModalWithCode(returnCode)
-      }
-    },
-  })
-
-  var window = (document.sketchObject || document).documentWindow()
-  dialog.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo(
-    null,
-    null,
-    window,
-    null,
-    null,
-    null
-  )
-
-  if (!callback) {
-    buttonClicked = NSApp.runModalForWindow(window)
-    NSApp.endSheet(dialog)
-    if (buttonClicked == 0) {
-      return String(dialog.URL().path())
-    }
-    return undefined
-  }
-
-  return undefined
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/@skpm/dialog/lib/utils.js":
-/*!************************************************!*\
-  !*** ./node_modules/@skpm/dialog/lib/utils.js ***!
-  \************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports.getURL = function getURL(path) {
-  return NSURL.URLWithString(
-    String(
-      NSString.stringWithString(path).stringByExpandingTildeInPath()
-    ).replace(/ /g, '%20')
-  )
-}
-
-
-/***/ }),
-
 /***/ "./node_modules/@skpm/timers/immediate.js":
 /*!************************************************!*\
   !*** ./node_modules/@skpm/timers/immediate.js ***!
@@ -804,194 +198,6 @@ module.exports = {
   clearTimeout: clearTimeout
 }
 
-
-/***/ }),
-
-/***/ "./node_modules/cocoascript-class/lib/index.js":
-/*!*****************************************************!*\
-  !*** ./node_modules/cocoascript-class/lib/index.js ***!
-  \*****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.SuperCall = undefined;
-exports.default = ObjCClass;
-
-var _runtime = __webpack_require__(/*! ./runtime.js */ "./node_modules/cocoascript-class/lib/runtime.js");
-
-exports.SuperCall = _runtime.SuperCall;
-
-// super when returnType is id and args are void
-// id objc_msgSendSuper(struct objc_super *super, SEL op, void)
-
-const SuperInit = (0, _runtime.SuperCall)(NSStringFromSelector("init"), [], { type: "@" });
-
-// Returns a real ObjC class. No need to use new.
-function ObjCClass(defn) {
-  const superclass = defn.superclass || NSObject;
-  const className = (defn.className || defn.classname || "ObjCClass") + NSUUID.UUID().UUIDString();
-  const reserved = new Set(['className', 'classname', 'superclass']);
-  var cls = MOClassDescription.allocateDescriptionForClassWithName_superclass_(className, superclass);
-  // Add each handler to the class description
-  const ivars = [];
-  for (var key in defn) {
-    const v = defn[key];
-    if (typeof v == 'function' && key !== 'init') {
-      var selector = NSSelectorFromString(key);
-      cls.addInstanceMethodWithSelector_function_(selector, v);
-    } else if (!reserved.has(key)) {
-      ivars.push(key);
-      cls.addInstanceVariableWithName_typeEncoding(key, "@");
-    }
-  }
-
-  cls.addInstanceMethodWithSelector_function_(NSSelectorFromString('init'), function () {
-    const self = SuperInit.call(this);
-    ivars.map(name => {
-      Object.defineProperty(self, name, {
-        get() {
-          return getIvar(self, name);
-        },
-        set(v) {
-          (0, _runtime.object_setInstanceVariable)(self, name, v);
-        }
-      });
-      self[name] = defn[name];
-    });
-    // If there is a passsed-in init funciton, call it now.
-    if (typeof defn.init == 'function') defn.init.call(this);
-    return self;
-  });
-
-  return cls.registerClass();
-};
-
-function getIvar(obj, name) {
-  const retPtr = MOPointer.new();
-  (0, _runtime.object_getInstanceVariable)(obj, name, retPtr);
-  return retPtr.value().retain().autorelease();
-}
-
-/***/ }),
-
-/***/ "./node_modules/cocoascript-class/lib/runtime.js":
-/*!*******************************************************!*\
-  !*** ./node_modules/cocoascript-class/lib/runtime.js ***!
-  \*******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.SuperCall = SuperCall;
-exports.CFunc = CFunc;
-const objc_super_typeEncoding = '{objc_super="receiver"@"super_class"#}';
-
-// You can store this to call your function. this must be bound to the current instance.
-function SuperCall(selector, argTypes, returnType) {
-  const func = CFunc("objc_msgSendSuper", [{ type: '^' + objc_super_typeEncoding }, { type: ":" }, ...argTypes], returnType);
-  return function (...args) {
-    const struct = make_objc_super(this, this.superclass());
-    const structPtr = MOPointer.alloc().initWithValue_(struct);
-    return func(structPtr, selector, ...args);
-  };
-}
-
-// Recursively create a MOStruct
-function makeStruct(def) {
-  if (typeof def !== 'object' || Object.keys(def).length == 0) {
-    return def;
-  }
-  const name = Object.keys(def)[0];
-  const values = def[name];
-
-  const structure = MOStruct.structureWithName_memberNames_runtime(name, Object.keys(values), Mocha.sharedRuntime());
-
-  Object.keys(values).map(member => {
-    structure[member] = makeStruct(values[member]);
-  });
-
-  return structure;
-}
-
-function make_objc_super(self, cls) {
-  return makeStruct({
-    objc_super: {
-      receiver: self,
-      super_class: cls
-    }
-  });
-}
-
-// Due to particularities of the JS bridge, we can't call into MOBridgeSupport objects directly
-// But, we can ask key value coding to do the dirty work for us ;)
-function setKeys(o, d) {
-  const funcDict = NSMutableDictionary.dictionary();
-  funcDict.o = o;
-  Object.keys(d).map(k => funcDict.setValue_forKeyPath(d[k], "o." + k));
-}
-
-// Use any C function, not just ones with BridgeSupport
-function CFunc(name, args, retVal) {
-  function makeArgument(a) {
-    if (!a) return null;
-    const arg = MOBridgeSupportArgument.alloc().init();
-    setKeys(arg, {
-      type64: a.type
-    });
-    return arg;
-  }
-  const func = MOBridgeSupportFunction.alloc().init();
-  setKeys(func, {
-    name: name,
-    arguments: args.map(makeArgument),
-    returnValue: makeArgument(retVal)
-  });
-  return func;
-}
-
-/*
-@encode(char*) = "*"
-@encode(id) = "@"
-@encode(Class) = "#"
-@encode(void*) = "^v"
-@encode(CGRect) = "{CGRect={CGPoint=dd}{CGSize=dd}}"
-@encode(SEL) = ":"
-*/
-
-function addStructToBridgeSupport(key, structDef) {
-  // OK, so this is probably the nastiest hack in this file.
-  // We go modify MOBridgeSupportController behind its back and use kvc to add our own definition
-  // There isn't another API for this though. So the only other way would be to make a real bridgesupport file.
-  const symbols = MOBridgeSupportController.sharedController().valueForKey('symbols');
-  if (!symbols) throw Error("Something has changed within bridge support so we can't add our definitions");
-  // If someone already added this definition, don't re-register it.
-  if (symbols[key] !== null) return;
-  const def = MOBridgeSupportStruct.alloc().init();
-  setKeys(def, {
-    name: key,
-    type: structDef.type
-  });
-  symbols[key] = def;
-};
-
-// This assumes the ivar is an object type. Return value is pretty useless.
-const object_getInstanceVariable = exports.object_getInstanceVariable = CFunc("object_getInstanceVariable", [{ type: "@" }, { type: '*' }, { type: "^@" }], { type: "^{objc_ivar=}" });
-// Again, ivar is of object type
-const object_setInstanceVariable = exports.object_setInstanceVariable = CFunc("object_setInstanceVariable", [{ type: "@" }, { type: '*' }, { type: "@" }], { type: "^{objc_ivar=}" });
-
-// We need Mocha to understand what an objc_super is so we can use it as a function argument
-addStructToBridgeSupport('objc_super', { type: objc_super_typeEncoding });
 
 /***/ }),
 
@@ -18442,6 +17648,215 @@ module.exports = function(module) {
 
 /***/ }),
 
+/***/ "./src/dialog.js":
+/*!***********************!*\
+  !*** ./src/dialog.js ***!
+  \***********************/
+/*! exports provided: suiteName, getDefaults, showDialog, savePreferences, resetPreferences */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "suiteName", function() { return suiteName; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getDefaults", function() { return getDefaults; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "showDialog", function() { return showDialog; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "savePreferences", function() { return savePreferences; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetPreferences", function() { return resetPreferences; });
+/* harmony import */ var sketch__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sketch */ "sketch");
+/* harmony import */ var sketch__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(sketch__WEBPACK_IMPORTED_MODULE_0__);
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+var suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
+var userDefaults;
+var usePrefix;
+var useDefaultPrefix;
+var useCustomSuffix;
+var customPrefixTextField;
+var customSuffixTextField;
+function getDefaults() {
+  userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
+  var prefixSettings = getPrefixSettings(true);
+  var suffixSettings = getSuffixSettings(true);
+  return _objectSpread({}, prefixSettings, suffixSettings);
+}
+;
+function showDialog(context) {
+  userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
+  var settingsDialog = COSAlertWindow.new();
+  settingsDialog.setMessageText("This plugin allows for renaming of SVG exports.");
+  settingsDialog.setInformativeText("You can change the settings for use of default prefix and suffix for this plugin.\n\nBy default, there is no suffix, and the prefix used is \"icon-\".");
+  settingsDialog.addButtonWithTitle("Save");
+  settingsDialog.addButtonWithTitle("Reset");
+  settingsDialog.addButtonWithTitle("Cancel");
+  var viewWidth = 300;
+  var viewHeight = 200;
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, viewWidth, viewHeight));
+  settingsDialog.addAccessoryView(view); // Adding the PopUpButton to the dialog
+
+  var dropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 25, viewWidth / 2, 22)); // Filling the PopUpButton with options
+
+  dropdown.addItemWithTitle("Prefix Settings");
+  dropdown.addItemWithTitle("Suffix Settings");
+  var prefixView = createPrefixView(viewWidth, viewHeight);
+  var suffixView = createSuffixView(viewWidth, viewHeight);
+  suffixView.hidden = true;
+
+  var switchView = function switchView(sender) {
+    var subviews = view.subviews;
+
+    if (sender.title().match(/Prefix/g)) {
+      prefixView.hidden = false;
+      suffixView.hidden = true;
+    } else {
+      prefixView.hidden = true;
+      suffixView.hidden = false;
+    }
+  };
+
+  dropdown.setCOSJSTargetFunction(function (sender) {
+    return switchView(sender);
+  });
+  view.addSubview(dropdown);
+  view.addSubview(prefixView);
+  view.addSubview(suffixView);
+  return [settingsDialog];
+}
+
+var enableCustomField = function enableCustomField(sender, customField) {
+  var turnOn = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  customField.enabled = turnOn;
+  log(sender.title() + " radio button was clicked");
+};
+
+function createPrefixView(parentViewWidth, parentViewHeight) {
+  var _getPrefixSettings = getPrefixSettings(),
+      noPrefixSetting = _getPrefixSettings.noPrefixSetting,
+      defaultPrefixSetting = _getPrefixSettings.defaultPrefixSetting,
+      customPrefixSetting = _getPrefixSettings.customPrefixSetting;
+
+  var _getPrefixSettings2 = getPrefixSettings(true),
+      userUsePrefix = _getPrefixSettings2.noPrefixSetting,
+      userUseDefault = _getPrefixSettings2.defaultPrefixSetting,
+      userUseCustom = _getPrefixSettings2.customPrefixSetting;
+
+  var baseY = parentViewHeight - 75;
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 200));
+  var noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
+  noPrefixBtn.setButtonType(NSRadioButton);
+  noPrefixBtn.setTitle("No prefix");
+  noPrefixBtn.setState(noPrefixSetting);
+  usePrefix = userUsePrefix;
+  var defaultPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY - 25, 400, 25));
+  defaultPrefixBtn.setButtonType(NSRadioButton);
+  defaultPrefixBtn.setTitle("Use `icon` prefix");
+  defaultPrefixBtn.setState(defaultPrefixSetting);
+  useDefaultPrefix = userUseDefault;
+  var customPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY - 50, 400, 25));
+  customPrefixBtn.setButtonType(NSRadioButton);
+  customPrefixBtn.setTitle("Custom prefix:");
+  customPrefixBtn.setState(customPrefixSetting);
+  customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, baseY - 75, 130, 20));
+  customPrefixTextField.enabled = userUseCustom;
+  noPrefixBtn.setCOSJSTargetFunction(function (sender) {
+    usePrefix = false;
+    useDefaultPrefix = false;
+    enableCustomField(sender, customPrefixTextField);
+  });
+  defaultPrefixBtn.setCOSJSTargetFunction(function (sender) {
+    usePrefix = true;
+    useDefaultPrefix = true;
+    enableCustomField(sender, customPrefixTextField);
+  });
+  customPrefixBtn.setCOSJSTargetFunction(function (sender) {
+    usePrefix = true;
+    useDefaultPrefix = false;
+    enableCustomField(sender, customPrefixTextField, true);
+  });
+  view.addSubview(noPrefixBtn);
+  view.addSubview(defaultPrefixBtn);
+  view.addSubview(customPrefixBtn);
+  view.addSubview(customPrefixTextField);
+  return view;
+}
+
+function createSuffixView(parentViewWidth, parentViewHeight) {
+  var _getSuffixSettings = getSuffixSettings(),
+      noSuffixSetting = _getSuffixSettings.noSuffixSetting,
+      customSuffixSetting = _getSuffixSettings.customSuffixSetting;
+
+  var _getSuffixSettings2 = getSuffixSettings(true),
+      userUseSuffix = _getSuffixSettings2.customSuffixSetting;
+
+  var baseY = parentViewHeight - 75;
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 200));
+  var noSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
+  noSuffixBtn.setButtonType(NSRadioButton);
+  noSuffixBtn.setTitle("No suffix");
+  noSuffixBtn.setState(noSuffixSetting);
+  useCustomSuffix = userUseSuffix;
+  var customSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY - 25, 400, 25));
+  customSuffixBtn.setButtonType(NSRadioButton);
+  customSuffixBtn.setTitle("Custom suffix:");
+  customSuffixBtn.setState(customSuffixSetting);
+  customSuffixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, baseY - 50, 130, 20));
+  customSuffixTextField.enabled = userUseSuffix;
+  noSuffixBtn.setCOSJSTargetFunction(function (sender) {
+    useCustomSuffix = false;
+    enableCustomField(sender, customSuffixTextField);
+  });
+  customSuffixBtn.setCOSJSTargetFunction(function (sender) {
+    useCustomSuffix = true;
+    enableCustomField(sender, customSuffixTextField, true);
+  });
+  view.addSubview(noSuffixBtn);
+  view.addSubview(customSuffixBtn);
+  view.addSubview(customSuffixTextField);
+  return view;
+}
+
+function getPrefixSettings() {
+  var useBoolValues = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var trueVal = useBoolValues ? true : NSOnState;
+  var falseVal = useBoolValues ? false : NSOffState;
+  return {
+    noPrefixSetting: userDefaults.objectForKey("usePrefix") != nil && userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("usePrefix") != 1 && userDefaults.objectForKey("useDefaultPrefix") != 1 ? trueVal : falseVal : falseVal,
+    defaultPrefixSetting: userDefaults.objectForKey("usePrefix") != nil && userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 && userDefaults.objectForKey("useDefaultPrefix") == 1 ? trueVal : falseVal : trueVal,
+    customPrefixSetting: userDefaults.objectForKey("usePrefix") != nil && userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 && userDefaults.objectForKey("useDefaultPrefix") != 1 ? trueVal : falseVal : falseVal
+  };
+}
+
+function getSuffixSettings() {
+  var useBoolValues = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  var trueVal = useBoolValues ? true : trueVal;
+  var falseVal = useBoolValues ? false : NSOffState;
+  return {
+    noSuffixSetting: userDefaults.objectForKey("useCustomSuffix") != nil ? userDefaults.objectForKey("useCustomSuffix") == 1 ? falseVal : trueVal : trueVal,
+    customSuffixSetting: userDefaults.objectForKey("useCustomSuffix") != nil ? userDefaults.objectForKey("useCustomSuffix") == 1 ? trueVal : falseVal : falseVal
+  };
+}
+
+function savePreferences() {
+  userDefaults.setObject_forKey(usePrefix, "usePrefix");
+  userDefaults.setObject_forKey(useDefaultPrefix, "useDefaultPrefix");
+  userDefaults.setObject_forKey(customPrefixTextField.stringValue(), "customPrefix");
+  userDefaults.setObject_forKey(useCustomSuffix, "useCustomSuffix");
+  userDefaults.setObject_forKey(customSuffixTextField.stringValue(), "customSuffix");
+  userDefaults.synchronize();
+}
+function resetPreferences() {
+  userDefaults.setObject_forKey(true, "usePrefix");
+  userDefaults.setObject_forKey(true, "useDefaultPrefix");
+  userDefaults.setObject_forKey(nil, "customPrefix");
+  userDefaults.setObject_forKey(false, "useCustomSuffix");
+  userDefaults.setObject_forKey(nil, "customSuffix");
+  userDefaults.synchronize();
+}
+
+/***/ }),
+
 /***/ "./src/plugin.js":
 /*!***********************!*\
   !*** ./src/plugin.js ***!
@@ -18455,161 +17870,36 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "renameExport", function() { return renameExport; });
 /* harmony import */ var sketch__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sketch */ "sketch");
 /* harmony import */ var sketch__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(sketch__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _skpm_dialog__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @skpm/dialog */ "./node_modules/@skpm/dialog/lib/index.js");
-/* harmony import */ var _skpm_dialog__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_skpm_dialog__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _dialog__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./dialog */ "./src/dialog.js");
 
 
+ // export { showSettings } from "./dialog";
 
 var defaultPrefix = "icon-";
-var suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
-
-function showDialog(context) {
-  var settingsDialog = COSAlertWindow.new();
-  settingsDialog.setMessageText("This plugin allows for renaming of SVG exports.");
-  settingsDialog.informativeText = "You can change the settings for use of default prefix and suffix for this plugin\n\n    By default, there is no suffix, and the prefix used is \"icon-\".";
-  settingsDialog.addButtonWithTitle("Save");
-  settingsDialog.addButtonWithTitle("Reset");
-  settingsDialog.addButtonWithTitle("Cancel");
-  var viewWidth = 300;
-  var viewHeight = 400;
-  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, viewWidth, viewHeight));
-  settingsDialog.addAccessoryView(view); // Creating the input
-
-  var dropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 230, viewWidth / 2, 22)); // Filling the PopUpButton with options
-
-  dropdown.addItemWithTitle("Prefix Settings");
-  dropdown.addItemWithTitle("Suffix Settings"); // Adding the PopUpButton to the dialog
-
-  view.addSubview(dropdown);
-  var prefixView = createPrefixView(); //const suffixView = createSuffixOptions(view);
-
-  view.addSubview(prefixView);
-  return [settingsDialog];
-}
-
-var enableCustomField = function enableCustomField(sender, customField) {
-  var turnOn = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-  customField.enabled = turnOn;
-  log(sender.title() + " radio button was clicked");
-};
-
-function createPrefixView() {
-  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, 200, 150));
-  var noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 50, 400, 25));
-  noPrefixBtn.setButtonType(NSRadioButton);
-  noPrefixBtn.setTitle("No prefix");
-  var defaultPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 75, 400, 25));
-  defaultPrefixBtn.setButtonType(NSRadioButton);
-  defaultPrefixBtn.setTitle("Use `icon` prefix");
-  var customPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 100, 400, 25));
-  customPrefixBtn.setButtonType(NSRadioButton);
-  customPrefixBtn.setTitle("Custom prefix:");
-  var customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, 125, 130, 20));
-  customPrefixTextField.enabled = false;
-  noPrefixBtn.setCOSJSTargetFunction(function (sender) {
-    return enableCustomField(sender, customPrefixTextField);
-  });
-  defaultPrefixBtn.setCOSJSTargetFunction(function (sender) {
-    return enableCustomField(sender, customPrefixTextField);
-  });
-  customPrefixBtn.setCOSJSTargetFunction(function (sender) {
-    return enableCustomField(sender, customPrefixTextField, true);
-  });
-  view.addSubview(noPrefixBtn);
-  view.addSubview(defaultPrefixBtn);
-  view.addSubview(customPrefixBtn);
-  view.addSubview(customPrefixTextField);
-  return view;
-}
-
-function createSuffixView() {
-  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, 200, 150));
-  var noSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 50, 400, 25));
-  noSuffixBtn.setButtonType(NSRadioButton);
-  noSuffixBtn.setTitle("No suffix");
-  var customSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, 100, 400, 25));
-  customSuffixBtn.setButtonType(NSRadioButton);
-  customSuffixBtn.setTitle("Custom suffix:");
-  var customSuffixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, 125, 130, 20));
-  customSuffixField.enabled = false;
-  noSuffixBtn.setCOSJSTargetFunction(function (sender) {
-    return enableCustomField(sender, customSuffixTextField);
-  });
-  customSuffixBtn.setCOSJSTargetFunction(function (sender) {
-    return enableCustomField(sender, customSuffixTextField, true);
-  });
-  view.addSubview(noSuffixBtn);
-  view.addSubview(customSuffixBtn);
-  view.addSubview(customSuffixTextField);
-  return view;
-} // Todo version 3: New UI for default prefix/suffix
-
-/**
-     _______________
-    | Prefix    ^  |
-
-     • No prefix
-     • Use `icon-` prefix
-     • Use custom prefix:  |____________|
-
-
-    _______________
-    | Suffix    ^  |
-
-     • No suffix
-     • Use custom suffix:  |____________|
- */
-
-
 function showSettings(context) {
   log("SHOWING OPTIONS");
-  var window = showDialog(context);
+  var window = Object(_dialog__WEBPACK_IMPORTED_MODULE_2__["showDialog"])(context);
   var alert = window[0];
-  var response = alert.runModal(); // const userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
-  // const response = dialog.showMessageBox({
-  //   type: "info",
-  //   title: "About SVG Export Renamer",
-  //   message: "This plugin allows for renaming of SVG exports.",
-  //   detail: "Artboard Name: Foo => foo.svg\nArtboard Name: Foo\\Bar => foo-bar.svg",
-  //   checkboxLabel: "Use `icon-` prefix",
-  //   buttons: ['Save', 'Reset', 'Cancel'],
-  //   checkboxChecked: userDefaults.objectForKey("useDefaultPrefix") != nil
-  //     ? userDefaults.objectForKey("useDefaultPrefix") == 1 
-  //     : true,
-  // }, ({ response, checkboxChecked}) => {
-  //   if (response == 0) { // Clicked Save
-  //     userDefaults.setObject_forKey(checkboxChecked, "useDefaultPrefix");
-  //   } else if (response == 1) { // reset
-  //     userDefaults.setObject_forKey(1, "useDefaultPrefix");
-  //   }
-  //   userDefaults.synchronize();
-  // });
-}
-; // Todo version 3: grab defaults from user preferences
+  var response = alert.runModal();
 
-function getUserDefaults() {
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
-  var useDefaultPrefix = userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true;
-  var customPrefix = userDefaults.objectForKey("customPrefix");
-  var customSuffix = userDefaults.objectForKey("customSuffix") != nil ? useDefaults.objectForKey("customSuffix") : false;
-  return {
-    useDefaultPrefix: useDefaultPrefix,
-    customPrefix: customPrefix,
-    customSuffix: customSuffix
-  };
+  if (response == "1000") {
+    Object(_dialog__WEBPACK_IMPORTED_MODULE_2__["savePreferences"])();
+  } else if (response == "1001") {
+    Object(_dialog__WEBPACK_IMPORTED_MODULE_2__["resetPreferences"])();
+  }
 }
-
 function renameExport(context) {
   log("RUNNING EXPORT");
   var fileManager = NSFileManager.defaultManager();
 
-  var _getUserDefaults = getUserDefaults(),
-      useDefaultPrefix = _getUserDefaults.useDefaultPrefix,
-      customSuffix = _getUserDefaults.customSuffix;
+  var _getDefaults = Object(_dialog__WEBPACK_IMPORTED_MODULE_2__["getDefaults"])(),
+      noPrefixSetting = _getDefaults.noPrefixSetting,
+      defaultPrefixSetting = _getDefaults.defaultPrefixSetting;
 
   var exports = context.actionContext.exports;
+  var useDefaultPrefix = !noPrefixSetting && defaultPrefixSetting;
   var filesToRename = [];
 
   for (var i = 0; i < exports.length; i++) {
@@ -18679,12 +17969,12 @@ function renameExport(context) {
 
       if (fileManager.fileExistsAtPath(fileDict.path)) {
         var svgFile = NSString.stringWithContentsOfFile_encoding_error(fileDict.path, NSUTF8StringEncoding, "Error in reading icon");
-        svgFile.writeToFile_atomically(newOutputPath, true);
+        svgFile.writeToFile_atomically(newOutputPath, false);
       }
 
       return dictionary;
     }, {});
-    Promise.all(Object(lodash__WEBPACK_IMPORTED_MODULE_2__["map"])(oldFilePaths, function (oldFilePath) {
+    Promise.all(Object(lodash__WEBPACK_IMPORTED_MODULE_1__["map"])(oldFilePaths, function (oldFilePath) {
       if (fileManager.fileExistsAtPath(oldFilePath.path)) {
         try {
           fileManager.removeItemAtPath_error(oldFilePath.path, "Error in deleting source icon");
