@@ -13,6 +13,11 @@ export function showDialog(context) {
   userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   const settingsDialog = COSAlertWindow.new();
 
+  settingsDialog.setIcon(
+    NSImage.alloc().initByReferencingFile(
+      context.plugin.urlForResourceNamed("icon.png").path()
+    )
+  );
   settingsDialog.setMessageText("This plugin allows for renaming of SVG exports.");
   settingsDialog.setInformativeText(`You can change the settings for use of default prefix and suffix for this plugin.\n
 By default, there is no suffix, and the prefix used is "icon-".`);
