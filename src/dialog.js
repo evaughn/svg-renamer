@@ -4,6 +4,7 @@ export const suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
 
 let userDefaults;
 let overrideArtboard;
+let selectedCaseType;
 let usePrefix;
 let useDefaultPrefix;
 let useCustomSuffix;
@@ -21,20 +22,49 @@ export function showDialog(context) {
   );
   settingsDialog.setMessageText("This plugin allows for renaming of SVG exports.");
   settingsDialog.setInformativeText(`You can change the settings for use of default prefix and suffix for this plugin.\n
-By default, there is no suffix, and the prefix used is "icon-".`);
+By default, there is no suffix, and the prefix used is "icon".`);
 
   settingsDialog.addButtonWithTitle("Save");
   settingsDialog.addButtonWithTitle("Reset");
   settingsDialog.addButtonWithTitle("Cancel");
 
   const viewWidth = 300;
-  const viewHeight = 210;
+  const viewHeight = 250;
 
   const view = NSView.alloc().initWithFrame(NSMakeRect(0,0, viewWidth, viewHeight));
   settingsDialog.addAccessoryView(view);
 
+  const caseLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 25, viewWidth - 100, 20));
+  caseLabel.setStringValue("Case type: ");
+  caseLabel.setSelectable(false);
+  caseLabel.setEditable(false);
+  caseLabel.setBezeled(false);
+  caseLabel.setDrawsBackground(false);
+
+  const caseType = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 47, viewWidth, 22));
+  caseType.addItemWithTitle("Dash Case (icon-named.svg)");
+  caseType.addItemWithTitle("Snake Case (icon_named.svg)");
+  caseType.addItemWithTitle("Title Case (iconRenamed.svg)");
+  caseType.selectItemAtIndex(getSelectedCaseIndex());
+  caseType.setCOSJSTargetFunction(sender => {
+    switch (sender.indexOfSelectedItem()) {
+      case 0:
+        selectedCaseType = "dash";
+        break;
+      case 1:
+        selectedCaseType = "snake";
+        break;
+      case 2:
+        selectedCaseType = "title";
+        break;
+      default:
+        selectedCaseType = "dash";
+        break;
+    }
+  });
+
   // Add checkbox for override
-  const checkbox = NSButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 25, viewWidth, 20));
+  const checkbox = NSButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 70, viewWidth, 20));
   overrideArtboard = getDefaults().overrideArtboard; 
   // Setting the options for the checkbox
   checkbox.setButtonType(NSSwitchButton);
@@ -46,11 +76,11 @@ By default, there is no suffix, and the prefix used is "icon-".`);
   });
 
   // Adding the PopUpButton to the dialog
-  const dropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 65, viewWidth / 2, 22));
+  const prefixSuffixDropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 110, viewWidth / 2, 22));
   
   // Filling the PopUpButton with options
-  dropdown.addItemWithTitle("Prefix Settings");
-  dropdown.addItemWithTitle("Suffix Settings");
+  prefixSuffixDropdown.addItemWithTitle("Prefix Settings");
+  prefixSuffixDropdown.addItemWithTitle("Suffix Settings");
 
   const prefixView = createPrefixView(viewWidth, viewHeight);
   const suffixView = createSuffixView(viewWidth, viewHeight);
@@ -67,9 +97,11 @@ By default, there is no suffix, and the prefix used is "icon-".`);
     }
   };
 
-  dropdown.setCOSJSTargetFunction(sender => switchView(sender));
+  prefixSuffixDropdown.setCOSJSTargetFunction(sender => switchView(sender));
+  view.addSubview(caseLabel);
+  view.addSubview(caseType);
   view.addSubview(checkbox);
-  view.addSubview(dropdown);
+  view.addSubview(prefixSuffixDropdown);
   view.addSubview(prefixView);
   view.addSubview(suffixView);
 
@@ -81,11 +113,21 @@ const enableCustomField = (sender, customField, turnOn = false) => {
   log(sender.title() + " radio button was clicked");
 };
 
+const getSelectedCaseIndex = () => {
+  const caseTypeMapping = {
+    dash: 0,
+    snake: 1,
+    title: 2
+  }
+  const { selectedCaseType } = getDefaults();
+  return caseTypeMapping[selectedCaseType];
+};
+
 function createPrefixView(parentViewWidth, parentViewHeight) {
   const { noPrefixSetting, defaultPrefixSetting, customPrefixSetting } = getPrefixSettings();
   const { usePrefix: userUsePrefix, useDefaultPrefix: userUseDefault } = getDefaults();
-  const baseY = parentViewHeight - 120;
-  const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 200));
+  const baseY = parentViewHeight - 210;
+  const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 300));
   const noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noPrefixBtn.setButtonType(NSRadioButton);
   noPrefixBtn.setTitle("No prefix");
@@ -136,9 +178,9 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
 function createSuffixView(parentViewWidth, parentViewHeight) {
   const { noSuffixSetting, customSuffixSetting } = getSuffixSettings();
   const { useCustomSuffix: userUseSuffix } = getDefaults();
-  const baseY = parentViewHeight - 120;
+  const baseY = parentViewHeight - 210;
   const view = NSView.alloc().initWithFrame(
-    NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 200)
+    NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 300)
   );
   const noSuffixBtn = NSButton.alloc().initWithFrame(
     NSMakeRect(0, baseY, 400, 25)
@@ -209,6 +251,7 @@ export function getDefaults() {
   userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   return {
     overrideArtboard: userDefaults.objectForKey("overrideArtboard") != nil ? userDefaults.objectForKey("overrideArtboard") == 1 : true,
+    selectedCaseType: userDefaults.objectForKey("selectedCaseType") != nil ? userDefaults.objectForKey("selectedCaseType") : "dash",
     usePrefix: userDefaults.objectForKey("usePrefix") != nil ? userDefaults.objectForKey("usePrefix") == 1 : true,
     useDefaultPrefix: userDefaults.objectForKey("useDefaultPrefix") != nil ? userDefaults.objectForKey("useDefaultPrefix") == 1 : true,
     customPrefix: userDefaults.objectForKey("customPrefix") != nil ? userDefaults.objectForKey("customPrefix") : null,
@@ -219,6 +262,7 @@ export function getDefaults() {
 
 export function savePreferences() {
   userDefaults.setObject_forKey(overrideArtboard, "overrideArtboard");
+  userDefaults.setObject_forKey(selectedCaseType, "selectedCaseType");
   userDefaults.setObject_forKey(usePrefix, "usePrefix");
   userDefaults.setObject_forKey(useDefaultPrefix, "useDefaultPrefix");
   userDefaults.setObject_forKey(customPrefixTextField.stringValue().replace(/\W/, ""), "customPrefix");
@@ -231,6 +275,7 @@ export function savePreferences() {
 
 export function resetPreferences() {
   userDefaults.setObject_forKey(true, "overrideArtboard");
+  userDefaults.setObject_forKey("dash", "selectedCaseType");
   userDefaults.setObject_forKey(true, "usePrefix");
   userDefaults.setObject_forKey(true, "useDefaultPrefix");
   userDefaults.setObject_forKey(nil, "customPrefix");

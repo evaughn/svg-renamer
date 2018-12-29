@@ -23,9 +23,16 @@ export function showSettings(context) {
   }
 }
 
+const selectedCaseMapping = {
+  dash: "-",
+  snake: "_",
+  title: "-*-",
+}
+
 function configureName(name) {
   const { 
     overrideArtboard,
+    selectedCaseType,
     usePrefix,
     useDefaultPrefix,
     customPrefix,
@@ -33,25 +40,40 @@ function configureName(name) {
     customSuffix 
   } = getDefaults();
 
+  const caseConnector = selectedCaseMapping[selectedCaseType];
+
   const pluginUseDefaultPrefix = usePrefix && useDefaultPrefix;
   const pluginUseCustomPrefix = usePrefix && !useDefaultPrefix;
 
-  if (!overrideArtboard) {
-    return name;
-  }
+  // if (!overrideArtboard) {
+  //   return name;
+  // }
   
   if (usePrefix) {
     if (pluginUseDefaultPrefix) {
-      name = `${defaultPrefix}-${name}`;
+      name = `${defaultPrefix}${caseConnector}${name}`;
     }
 
     if (pluginUseCustomPrefix) {
-      name = `${customPrefix}-${name}`;
+      name = `${customPrefix}${caseConnector}${name}`;
     }
   }
 
   if (useCustomSuffix) {
-    name += `-${customSuffix}`;
+    name += `${caseConnector}${customSuffix}`;
+  }
+
+  if (selectedCaseType == "title") {
+    const nameArray = name.split(caseConnector);
+    name = nameArray
+      .map((split, index) => {
+        if (index === 0) {
+          return split;
+        }
+
+        return split.charAt(0).toUpperCase() + split.substr(1).toLowerCase();
+      })
+      .join("");
   }
 
   return name;
