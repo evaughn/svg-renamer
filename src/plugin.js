@@ -61,12 +61,10 @@ function configureName(name) {
 
   if (selectedCaseType == "title") {
     const nameArray = name.split(caseConnector);
-    name = nameArray
-      .map((split, index) => {
+    name = map(nameArray, (split, index) => {
         if (index === 0) {
           return split;
         }
-
         return split.charAt(0).toUpperCase() + split.substr(1).toLowerCase();
       })
       .join("");
