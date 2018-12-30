@@ -1,4 +1,5 @@
-import sketch from "sketch"
+import sketch from "sketch";
+import { caseTypeMapping } from "./case-utils";
 
 export const suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
 
@@ -35,7 +36,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   settingsDialog.addAccessoryView(view);
 
   const caseLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 25, viewWidth - 100, 20));
-  caseLabel.setStringValue("Case type: ");
+  caseLabel.setStringValue("Case type:");
   caseLabel.setSelectable(false);
   caseLabel.setEditable(false);
   caseLabel.setBezeled(false);
@@ -74,6 +75,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   checkbox.setCOSJSTargetFunction(sender => {
     overrideArtboard = !overrideArtboard;
   });
+  checkbox.enabled = false;
 
   // Adding the PopUpButton to the dialog
   const prefixSuffixDropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 110, viewWidth / 2, 22));
@@ -103,7 +105,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   view.addSubview(checkbox);
   view.addSubview(prefixSuffixDropdown);
   view.addSubview(prefixView);
-  view.addSubview(suffixView);
+ // view.addSubview(suffixView);
 
   return [settingsDialog];
 }
@@ -114,11 +116,6 @@ const enableCustomField = (sender, customField, turnOn = false) => {
 };
 
 const getSelectedCaseIndex = () => {
-  const caseTypeMapping = {
-    dash: 0,
-    snake: 1,
-    title: 2
-  }
   const { selectedCaseType } = getDefaults();
   return caseTypeMapping[selectedCaseType];
 };
@@ -127,7 +124,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
   const { noPrefixSetting, defaultPrefixSetting, customPrefixSetting } = getPrefixSettings();
   const { usePrefix: userUsePrefix, useDefaultPrefix: userUseDefault } = getDefaults();
   const baseY = parentViewHeight - 210;
-  const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 300));
+  const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 100));
   const noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noPrefixBtn.setButtonType(NSRadioButton);
   noPrefixBtn.setTitle("No prefix");
@@ -180,7 +177,7 @@ function createSuffixView(parentViewWidth, parentViewHeight) {
   const { useCustomSuffix: userUseSuffix } = getDefaults();
   const baseY = parentViewHeight - 210;
   const view = NSView.alloc().initWithFrame(
-    NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 300)
+    NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 400)
   );
   const noSuffixBtn = NSButton.alloc().initWithFrame(
     NSMakeRect(0, baseY, 400, 25)

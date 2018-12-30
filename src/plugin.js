@@ -7,6 +7,7 @@ import {
   savePreferences,
   resetPreferences
 } from "./dialog";
+import { selectedCaseMapping } from "./case-utils";
 
 const defaultPrefix = "icon";
 
@@ -21,12 +22,6 @@ export function showSettings(context) {
   } else if (response == "1001") {
     resetPreferences();
   }
-}
-
-const selectedCaseMapping = {
-  dash: "-",
-  snake: "_",
-  title: "-*-",
 }
 
 function configureName(name) {
@@ -104,8 +99,8 @@ export function renameExport(context) {
     const oldFilePaths = filesToRename.reduce((dictionary, fileDict) => {
       const fileName = fileDict.request.name();
       const artboardName = fileDict.request.rootLayer().name();
-      let exportName = "";
       let name = getOverrideName(fileName, artboardName);
+      let exportName = "";
 
       name = name.replace(/\s/g, "-");
       name = name.replace(/\&/g, "and");
