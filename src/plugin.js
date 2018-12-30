@@ -3,7 +3,6 @@ import { map } from "lodash";
 import {
   getDefaults,
   showDialog,
-  suiteName,
   savePreferences,
   resetPreferences
 } from "./dialog";

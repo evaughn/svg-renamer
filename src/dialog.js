@@ -1,7 +1,7 @@
 import sketch from "sketch";
 import { caseTypeMapping } from "./case-utils";
 
-export const suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
+const suiteName = "com.sketchapp.plugins.svg-export-renamer.defaults";
 
 let userDefaults;
 let overrideArtboard;
