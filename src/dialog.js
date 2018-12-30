@@ -47,6 +47,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   caseType.addItemWithTitle("Snake Case (icon_named.svg)");
   caseType.addItemWithTitle("Title Case (iconRenamed.svg)");
   caseType.selectItemAtIndex(getSelectedCaseIndex());
+  selectedCaseType = getDefaults().selectedCaseType;
   caseType.setCOSJSTargetFunction(sender => {
     switch (sender.indexOfSelectedItem()) {
       case 0:
