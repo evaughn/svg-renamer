@@ -1,5 +1,5 @@
 import sketch from "sketch";
-import { map } from "lodash";
+import { map, reduce } from "lodash";
 import {
   getDefaults,
   showDialog,
@@ -38,6 +38,8 @@ function configureName(name) {
 
   const pluginUseDefaultPrefix = usePrefix && useDefaultPrefix;
   const pluginUseCustomPrefix = usePrefix && !useDefaultPrefix;
+  
+  name = name.replace(/\s/g, caseConnector);
 
   // if (!overrideArtboard) {
   //   return name;
@@ -95,15 +97,14 @@ export function renameExport(context) {
 
   if (filesToRename.length > 0) {
     let oldFiles = {};
-    const oldFilePaths = filesToRename.reduce((dictionary, fileDict) => {
+    const oldFilePaths = reduce(filesToRename, (dictionary, fileDict) => {
       const fileName = fileDict.request.name();
       const artboardName = fileDict.request.rootLayer().name();
       let name = getOverrideName(fileName, artboardName);
       let exportName = "";
 
-      name = name.replace(/\s/g, "-");
       name = name.replace(/\&/g, "and");
-      name = name.replace(/(?!-)(?!\/)([0-9]|\W|\_)/g, "");
+      name = name.replace(/(?!-)(?!\s)(?!\/)([0-9]|\W|\_)/g, "");
 
       const nameArray = name.split("/");
       const categoryName = nameArray[0];
@@ -113,7 +114,7 @@ export function renameExport(context) {
       if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
         exportName = configureName(categoryName);
       } else {
-        exportName = configureName(`${categoryName}-${typeName}`);
+        exportName = configureName(`${categoryName} ${typeName}`);
       }
 
       const newOutputPath = fileDict.path.replace(`${fileName}.svg`, `${exportName}.svg`);

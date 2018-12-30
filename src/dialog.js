@@ -89,7 +89,6 @@ By default, there is no suffix, and the prefix used is "icon".`);
   suffixView.hidden = true;
 
   const switchView = sender => {
-    const subviews = view.subviews;
     if(sender.title().match(/Prefix/g)) {
       prefixView.hidden = false;
       suffixView.hidden = true;
