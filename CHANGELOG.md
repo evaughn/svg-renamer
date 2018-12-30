@@ -1,6 +1,11 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.2.1 - 30/12/18
+### Added
+  - Surfaced disabled default for override prefix/suffix (overrides prefix/suffix on artboard by default)
+  - New ability to change how names are saved out (titleCase, dash-case, or snake_case)
+
 ## 3.2.0 - 28/12/18
 ### Added
  - Make plugin useful with other plugins - replaces old export path with new
