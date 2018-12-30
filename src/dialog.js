@@ -13,8 +13,8 @@ let customPrefixTextField;
 let customSuffixTextField;
 
 export function showDialog(context) {
-  userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
   const settingsDialog = COSAlertWindow.new();
+  userDefaults = NSUserDefaults.alloc().initWithSuiteName(suiteName);
 
   settingsDialog.setIcon(
     NSImage.alloc().initByReferencingFile(
@@ -30,7 +30,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   settingsDialog.addButtonWithTitle("Cancel");
 
   const viewWidth = 300;
-  const viewHeight = 250;
+  const viewHeight = 290;
 
   const view = NSView.alloc().initWithFrame(NSMakeRect(0,0, viewWidth, viewHeight));
   settingsDialog.addAccessoryView(view);
@@ -105,7 +105,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   view.addSubview(checkbox);
   view.addSubview(prefixSuffixDropdown);
   view.addSubview(prefixView);
- // view.addSubview(suffixView);
+  view.addSubview(suffixView);
 
   return [settingsDialog];
 }
@@ -124,7 +124,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
   const { noPrefixSetting, defaultPrefixSetting, customPrefixSetting } = getPrefixSettings();
   const { usePrefix: userUsePrefix, useDefaultPrefix: userUseDefault } = getDefaults();
   const baseY = parentViewHeight - 210;
-  const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 185), parentViewWidth, 100));
+  const view = NSView.alloc().initWithFrame(NSMakeRect(0, (parentViewHeight - 225), parentViewWidth, 400));
   const noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noPrefixBtn.setButtonType(NSRadioButton);
   noPrefixBtn.setTitle("No prefix");
@@ -177,7 +177,7 @@ function createSuffixView(parentViewWidth, parentViewHeight) {
   const { useCustomSuffix: userUseSuffix } = getDefaults();
   const baseY = parentViewHeight - 210;
   const view = NSView.alloc().initWithFrame(
-    NSMakeRect(0, parentViewHeight - 185, parentViewWidth, 400)
+    NSMakeRect(0, parentViewHeight - 225, parentViewWidth, 400)
   );
   const noSuffixBtn = NSButton.alloc().initWithFrame(
     NSMakeRect(0, baseY, 400, 25)
