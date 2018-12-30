@@ -23,7 +23,7 @@ export function showSettings(context) {
   }
 }
 
-function configureName(name) {
+function configureName(name, predefinedPrefixSuffix = false) {
   const { 
     overrideArtboard,
     selectedCaseType,
@@ -41,9 +41,9 @@ function configureName(name) {
   
   name = name.replace(/\s/g, caseConnector);
 
-  // if (!overrideArtboard) {
-  //   return name;
-  // }
+  if (!overrideArtboard && predefinedPrefixSuffix) {
+    return name;
+  }
   
   if (usePrefix) {
     if (pluginUseDefaultPrefix) {
@@ -98,6 +98,8 @@ export function renameExport(context) {
     const oldFilePaths = reduce(filesToRename, (dictionary, fileDict) => {
       const fileName = fileDict.request.name();
       const artboardName = fileDict.request.rootLayer().name();
+      const hasPredefinedPrefixSuffix = (fileName.toLowerCase() === artboardName.toLowerCase()) ? false : true;
+
       let name = getOverrideName(fileName, artboardName);
       let exportName = "";
 
@@ -110,9 +112,9 @@ export function renameExport(context) {
       const isDirectory = nameArray.length > 1;
 
       if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
-        exportName = configureName(categoryName);
+        exportName = configureName(categoryName, hasPredefinedPrefixSuffix);
       } else {
-        exportName = configureName(`${categoryName} ${typeName}`);
+        exportName = configureName(`${categoryName} ${typeName}`, hasPredefinedPrefixSuffix);
       }
 
       const newOutputPath = fileDict.path.replace(`${fileName}.svg`, `${exportName}.svg`);

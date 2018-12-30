@@ -75,7 +75,7 @@ By default, there is no suffix, and the prefix used is "icon".`);
   checkbox.setCOSJSTargetFunction(sender => {
     overrideArtboard = !overrideArtboard;
   });
-  checkbox.enabled = false;
+  //checkbox.enabled = false;
 
   // Adding the PopUpButton to the dialog
   const prefixSuffixDropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 110, viewWidth / 2, 22));
