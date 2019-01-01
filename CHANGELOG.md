@@ -1,6 +1,10 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.2.2 - 30/12/18
+### Changed
+  - Increase width of dialog and update text field styling
+
 ## 3.2.1 - 30/12/18
 ### Added
   - Surfaced checkbox for override prefix/suffix (overrides prefix/suffix on artboard by default)
