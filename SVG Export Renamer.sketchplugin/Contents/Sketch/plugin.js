@@ -17705,10 +17705,10 @@ function showDialog(context) {
   settingsDialog.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
   settingsDialog.setMessageText("This plugin allows for renaming of SVG exports.");
   settingsDialog.setInformativeText("You can change the settings for use of default prefix and suffix for this plugin.\n\nBy default, there is no suffix, and the prefix used is \"icon\".");
-  settingsDialog.addButtonWithTitle("Save");
-  settingsDialog.addButtonWithTitle("Reset");
+  settingsDialog.addButtonWithTitle("Save Settings");
+  settingsDialog.addButtonWithTitle("Reset Settings");
   settingsDialog.addButtonWithTitle("Cancel");
-  var viewWidth = 300;
+  var viewWidth = 350;
   var viewHeight = 290;
   var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, viewWidth, viewHeight));
   settingsDialog.addAccessoryView(view);
@@ -17718,7 +17718,7 @@ function showDialog(context) {
   caseLabel.setEditable(false);
   caseLabel.setBezeled(false);
   caseLabel.setDrawsBackground(false);
-  var caseType = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 47, viewWidth, 22));
+  var caseType = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 47, 300, 22));
   caseType.addItemWithTitle("Dash Case (icon-named.svg)");
   caseType.addItemWithTitle("Snake Case (icon_named.svg)");
   caseType.addItemWithTitle("Title Case (iconRenamed.svg)");
@@ -17744,7 +17744,7 @@ function showDialog(context) {
     }
   }); // Add checkbox for override
 
-  var checkbox = NSButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 70, viewWidth, 20));
+  var checkbox = NSButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 78, viewWidth, 20));
   overrideArtboard = getDefaults().overrideArtboard; // Setting the options for the checkbox
 
   checkbox.setButtonType(NSSwitchButton);
@@ -17756,7 +17756,7 @@ function showDialog(context) {
   }); //checkbox.enabled = false;
   // Adding the PopUpButton to the dialog
 
-  var prefixSuffixDropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 110, viewWidth / 2, 22)); // Filling the PopUpButton with options
+  var prefixSuffixDropdown = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 130, 300, 22)); // Filling the PopUpButton with options
 
   prefixSuffixDropdown.addItemWithTitle("Prefix Settings");
   prefixSuffixDropdown.addItemWithTitle("Suffix Settings");
@@ -17810,7 +17810,7 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
       userUseDefault = _getDefaults2.useDefaultPrefix;
 
   var baseY = parentViewHeight - 210;
-  var view = NSView.alloc().initWithFrame(NSMakeRect(0, parentViewHeight - 225, parentViewWidth, 400));
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, parentViewHeight - 240, parentViewWidth, 400));
   var noPrefixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noPrefixBtn.setButtonType(NSRadioButton);
   noPrefixBtn.setTitle("No prefix");
@@ -17825,7 +17825,9 @@ function createPrefixView(parentViewWidth, parentViewHeight) {
   customPrefixBtn.setButtonType(NSRadioButton);
   customPrefixBtn.setTitle("Custom prefix:");
   customPrefixBtn.setState(customPrefixSetting);
-  customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, baseY - 75, 130, 20));
+  customPrefixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, baseY - 75, 250, 20));
+  customPrefixTextField.bezeled = true;
+  customPrefixTextField.bezelStyle = NSTextFieldRoundedBezel;
   customPrefixTextField.enabled = usePrefix && !useDefaultPrefix;
 
   if (userDefaults.objectForKey("customPrefix") != nil) {
@@ -17863,7 +17865,7 @@ function createSuffixView(parentViewWidth, parentViewHeight) {
       userUseSuffix = _getDefaults3.useCustomSuffix;
 
   var baseY = parentViewHeight - 210;
-  var view = NSView.alloc().initWithFrame(NSMakeRect(0, parentViewHeight - 225, parentViewWidth, 400));
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, parentViewHeight - 240, parentViewWidth, 400));
   var noSuffixBtn = NSButton.alloc().initWithFrame(NSMakeRect(0, baseY, 400, 25));
   noSuffixBtn.setButtonType(NSRadioButton);
   noSuffixBtn.setTitle("No suffix");
@@ -17873,8 +17875,10 @@ function createSuffixView(parentViewWidth, parentViewHeight) {
   customSuffixBtn.setButtonType(NSRadioButton);
   customSuffixBtn.setTitle("Custom suffix:");
   customSuffixBtn.setState(customSuffixSetting);
-  customSuffixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, baseY - 50, 130, 20));
+  customSuffixTextField = NSTextField.alloc().initWithFrame(NSMakeRect(20, baseY - 50, 250, 20));
   customSuffixTextField.enabled = userUseSuffix;
+  customSuffixTextField.bezeled = true;
+  customSuffixTextField.bezelStyle = NSTextFieldRoundedBezel;
 
   if (userDefaults.objectForKey("customSuffix") != nil) {
     customSuffixTextField.setStringValue(userDefaults.objectForKey("customSuffix"));
