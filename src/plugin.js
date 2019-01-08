@@ -111,7 +111,7 @@ export function renameExport(context) {
       const typeName = nameArray[nameArray.length - 1];
       const isDirectory = nameArray.length > 1;
 
-      if (nameArray.length === 1 || typeName === "default" || !!parseInt(typeName)) {
+      if (nameArray.length === 1 || !!parseInt(typeName)) {
         exportName = configureName(categoryName, hasPredefinedPrefixSuffix);
       } else {
         exportName = configureName(`${categoryName} ${typeName}`, hasPredefinedPrefixSuffix);
