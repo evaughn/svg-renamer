@@ -43,9 +43,9 @@ By default, there is no suffix, and the prefix used is "icon".`);
   caseLabel.setDrawsBackground(false);
 
   const caseType = NSPopUpButton.alloc().initWithFrame(NSMakeRect(0, viewHeight - 47, 300, 22));
-  caseType.addItemWithTitle("Dash Case (icon-named.svg)");
+  caseType.addItemWithTitle("Kebab Case (icon-named.svg)");
   caseType.addItemWithTitle("Snake Case (icon_named.svg)");
-  caseType.addItemWithTitle("Title Case (iconRenamed.svg)");
+  caseType.addItemWithTitle("Camel Case (iconRenamed.svg)");
   caseType.selectItemAtIndex(getSelectedCaseIndex());
   selectedCaseType = getDefaults().selectedCaseType;
   caseType.setCOSJSTargetFunction(sender => {

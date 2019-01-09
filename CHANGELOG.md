@@ -1,6 +1,10 @@
 # Changelog
 Documents all notable changes made to the SVG Export Renamer plugin
 
+## 3.3.1 - 09/01/19
+### Changed
+  - Update option names (Snake case (snake_case), Kebab case (kebab-case), Camel case (camelCase))
+
 ## 3.3.0 - 07/01/19
 ### Changed
   - Remove removal of "default" from export name
