@@ -11,3 +11,6 @@ npm-debug.log
 
 # WebStorm
 .idea
+
+#build-directions
+skpm-process.md
