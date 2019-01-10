@@ -5,9 +5,9 @@
 
 ## Settings
 ### Case type
- 1) Kebab Case (icon-name.png) [default]
- 2) Snake Case (icon_name.png)
- 3) Camel Case (iconName.png)
+ 1) Kebab Case (`icon-name.svg`) [default]
+ 2) Snake Case (`icon_name.svg`)
+ 3) Camel Case (`iconName.svg`)
 
 ### Override
  You can choose to override the prefix/suffix set on artboards (is the default), or opt to respect the prefix/suffix set
