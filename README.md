@@ -2,8 +2,9 @@
 
 [Download and unzip](http://evaughn.net/svg-export-renamer.sketchplugin.zip)
 
-![prefix](https://user-images.githubusercontent.com/3017967/50996270-4da92b80-14d6-11e9-82c2-aaaa5c6ce337.png)
-![suffix](https://user-images.githubusercontent.com/3017967/50996269-4da92b80-14d6-11e9-9f54-e173dd4356ee.png)
+<img width="622" alt="screen shot 2019-01-14 at 3 58 34 pm" src="https://user-images.githubusercontent.com/3017967/51149073-60449d00-1815-11e9-91c7-601ef4990d74.png">
+<img width="622" alt="screen shot 2019-01-14 at 3 58 39 pm" src="https://user-images.githubusercontent.com/3017967/51149075-60449d00-1815-11e9-8070-0d7c5e5069cb.png">
+
 
 ## Settings
 ### Case type
