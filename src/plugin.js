@@ -114,7 +114,7 @@ export function renameExport(context) {
       if (nameArray.length === 1 || !!parseInt(typeName)) {
         exportName = configureName(categoryName, hasPredefinedPrefixSuffix);
       } else {
-        exportName = configureName(`${categoryName} ${typeName}`, hasPredefinedPrefixSuffix);
+        exportName = configureName(nameArray.join(" "), hasPredefinedPrefixSuffix);
       }
 
       const newOutputPath = fileDict.path.replace(`${fileName}.svg`, `${exportName}.svg`);
