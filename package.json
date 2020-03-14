@@ -19,8 +19,11 @@
     "postinstall": "npm run build && skpm-link"
   },
   "devDependencies": {
-    "@skpm/builder": "^0.5.16",
+    "@skpm/builder": "^0.7.5",
     "@skpm/dialog": "^0.2.4"
   },
-  "author": "Evan Vaughn <evan@goabstract.com>"
+  "author": "Evan Vaughn <evan@goabstract.com>",
+  "dependencies": {
+    "minimist": "^1.2.5"
+  }
 }
