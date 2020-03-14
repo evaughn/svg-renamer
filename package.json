@@ -22,8 +22,5 @@
     "@skpm/builder": "^0.7.5",
     "@skpm/dialog": "^0.2.4"
   },
-  "author": "Evan Vaughn <evan@goabstract.com>",
-  "dependencies": {
-    "minimist": "^1.2.5"
-  }
+  "author": "Evan Vaughn <evan@goabstract.com>"
 }
